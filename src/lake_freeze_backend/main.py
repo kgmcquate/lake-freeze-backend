@@ -25,19 +25,19 @@ lakes = [
 
 @app.get("/lakes")
 def get_lakes(
-        start_latitude: float = -90.0,
-        end_latitude: float = 90.0,
-        start_longitude: float = -180.0,
-        end_longitude: float = 180.0
+        min_latitude: float = -90.0,
+        max_latitude: float = 90.0,
+        min_longitude: float = -180.0,
+        max_longitude: float = 180.0
     ):
     
     filtered_lakes = [
         lake
         for lake in lakes
         if (
-            start_longitude <= lake.longitude <= end_longitude
+            min_longitude <= lake.longitude <= max_longitude
         ) and (
-            start_latitude <= lake.latitude <= end_latitude
+            min_latitude <= lake.latitude <= max_latitude
         )
     ]
 
