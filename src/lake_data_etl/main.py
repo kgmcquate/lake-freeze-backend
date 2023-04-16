@@ -2,6 +2,28 @@ from dataclasses import dataclass
 from bs4 import BeautifulSoup
 import requests
 import pandas as pd
+import boto3
+import json
+import sqlalchemy
+
+
+secret = json.loads(
+        boto3.client("secretsmanager", 'us-east-1')
+        .get_secret_value(SecretId="arn:aws:secretsmanager:us-east-1:117819748843:secret:rds!cluster-3df474bd-1222-4fb5-aa0d-9c969631908c-fIqiYm")
+        ["SecretString"]
+)
+
+db_username = secret["username"]
+
+db_password = secret["password"]
+
+db_endpoint = "lake-freeze.cluster-cu0bcthnum69.us-east-1.rds.amazonaws.com"
+
+
+ 
+engine = sqlalchemy.create_engine(f'postgresql+psycopg2://{db_username}:{db_password}@{db_endpoint}/lake_freeze')
+
+
 
 states = ["Minnesota"]
 
@@ -46,5 +68,5 @@ for state in states:
     print(df.head())
             
 
-    # print(tables)
+    df.to_sql('lakes', engine, if_exists='replace')
 
