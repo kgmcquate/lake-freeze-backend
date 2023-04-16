@@ -1,0 +1,6 @@
+requests
+pandas
+bs4
+boto3
+sqlalchemy
+psycopg2
