@@ -9,7 +9,7 @@ import sqlalchemy
 
 secret = json.loads(
         boto3.client("secretsmanager", 'us-east-1')
-        .get_secret_value(SecretId="arn:aws:secretsmanager:us-east-1:117819748843:secret:rds!cluster-3df474bd-1222-4fb5-aa0d-9c969631908c-fIqiYm")
+        .get_secret_value(SecretId="arn:aws:secretsmanager:us-east-1:117819748843:secret:rds-lake-freeze-credentials-5gwihC")
         ["SecretString"]
 )
 
@@ -17,7 +17,7 @@ db_username = secret["username"]
 
 db_password = secret["password"]
 
-db_endpoint = "lake-freeze.cluster-cu0bcthnum69.us-east-1.rds.amazonaws.com"
+db_endpoint = "lake-freeze-backend-db.cluster-cu0bcthnum69.us-east-1.rds.amazonaws.com"
 
 
  
