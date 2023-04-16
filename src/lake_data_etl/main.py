@@ -5,6 +5,7 @@ import pandas as pd
 import boto3
 import json
 import sqlalchemy
+from sqlalchemy.sql import text
 
 
 secret = json.loads(
@@ -21,9 +22,13 @@ db_endpoint = "lake-freeze.cluster-cu0bcthnum69.us-east-1.rds.amazonaws.com"
 
 
  
-engine = sqlalchemy.create_engine(f'postgresql+psycopg2://{db_username}:{db_password}@{db_endpoint}/lake_freeze')
+engine = sqlalchemy.create_engine(f'postgresql+psycopg2://{db_username}:{db_password}@{db_endpoint}') #/lake_freeze
 
 
+# with engine.connect() as conn:
+#     for row in conn.execute(text("SELECT 6")):
+#         print(row)
+    
 
 states = ["Minnesota"]
 
@@ -66,7 +71,6 @@ for state in states:
 
     df = pd.DataFrame(rows, columns=colnames )
     print(df.head())
-            
 
-    df.to_sql('lakes', engine, if_exists='replace')
+    df.to_sql(name='lakes', con=engine, if_exists='replace')
 
