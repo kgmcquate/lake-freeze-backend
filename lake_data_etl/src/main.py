@@ -25,6 +25,25 @@ db_endpoint = "lake-freeze-backend-db.cluster-cu0bcthnum69.us-east-1.rds.amazona
 engine = sqlalchemy.create_engine(f'postgresql+psycopg2://{db_username}:{db_password}@{db_endpoint}') #/lake_freeze
 
 
+from sqlalchemy import  MetaData, Table, Column, Integer, String, Float
+
+
+metadata = MetaData()
+
+lakes_table = Table('lakes', metadata,
+    Column('lake', String),
+    Column('nearby_town', String),
+    Column('surface_area_m2', Float),
+    Column('max_depth_m', Float)
+)
+
+
+
+metadata.create_all(engine)
+
+
+# ['lake', 'nearby_town', 'size(acres)',  'max_depth(ft)']
+
 # with engine.connect() as conn:
 #     for row in conn.execute(text("SELECT 6")):
 #         print(row)
@@ -70,6 +89,33 @@ for state in states:
         rows.append(clean_row)
 
     df = pd.DataFrame(rows, columns=colnames )
+    
+    
+    df.dropna(inplace=True)
+    
+    def convert_to_float(s):
+        s = s.replace(",", "").strip()
+        try:
+            return float(s)
+        except ValueError as e:
+            return None
+            
+    df['size(acres)'] = df['size(acres)'].apply(convert_to_float)
+    
+    df['max_depth(ft)'] = df['max_depth(ft)'].apply(convert_to_float)
+    
+    # df = df[~df["size(acres)"].str.contains(";")]
+    # df = df[df["size(acres)"].str.len() > 0]
+    
+    # df['size(acres)'] = df['size(acres)'].str.replace(",", "").astype(float, errors='ignore')
+    # df = df[df['size(acres)'].dtype == float]
+    
+    df['surface_area_m2'] = df['size(acres)'] * 4046.8564224
+    
+    df['max_depth_m'] = df['max_depth(ft)'] * 0.3048
+    
+    df = df[['lake', 'nearby_town', 'surface_area_m2',  'max_depth_m']]
+    
     print(df.head())
 
     df.to_sql(name='lakes', con=engine, if_exists='replace')
