@@ -8,22 +8,6 @@ import sqlalchemy
 from sqlalchemy.sql import text
 
 
-secret = json.loads(
-        boto3.client("secretsmanager", 'us-east-1')
-        .get_secret_value(SecretId="arn:aws:secretsmanager:us-east-1:117819748843:secret:rds-lake-freeze-credentials-5gwihC")
-        ["SecretString"]
-)
-
-db_username = secret["username"]
-
-db_password = secret["password"]
-
-db_endpoint = "lake-freeze-backend-db.cluster-cu0bcthnum69.us-east-1.rds.amazonaws.com"
-
-
- 
-engine = sqlalchemy.create_engine(f'postgresql+psycopg2://{db_username}:{db_password}@{db_endpoint}') #/lake_freeze
-
 
 from sqlalchemy import  MetaData, Table, Column, Integer, String, Float
 
@@ -114,7 +98,9 @@ for state in states:
     
     df['max_depth_m'] = df['max_depth(ft)'] * 0.3048
     
-    df = df[['lake', 'nearby_town', 'surface_area_m2',  'max_depth_m']]
+    df['name'] = df['lake']
+    
+    df = df[['name', 'nearby_town', 'surface_area_m2',  'max_depth_m']]
     
     print(df.head())
 
