@@ -45,39 +45,39 @@ def get_home_page():
     """
 
 
-# @app.get("/lakes")
-# def get_lakes(
-#         min_surface_area: Optional[float] = None,
-#         max_surface_area: Optional[float] = None,
-#         min_latitude: float = -90.0,
-#         max_latitude: float = 90.0,
-#         min_longitude: float = -180.0,
-#         max_longitude: float = 180.0
-#     ):
+@app.get("/lakes")
+def get_lakes(
+        min_surface_area: Optional[float] = None,
+        max_surface_area: Optional[float] = None,
+        min_latitude: float = -90.0,
+        max_latitude: float = 90.0,
+        min_longitude: float = -180.0,
+        max_longitude: float = 180.0
+    ):
     
-#     # filtered_lakes = [
-#     #     lake
-#     #     for lake in lakes
-#     #     if (
-#     #         min_longitude <= lake.longitude <= max_longitude
-#     #     ) and (
-#     #         min_latitude <= lake.latitude <= max_latitude
-#     #     )
-#     # ]
+    # filtered_lakes = [
+    #     lake
+    #     for lake in lakes
+    #     if (
+    #         min_longitude <= lake.longitude <= max_longitude
+    #     ) and (
+    #         min_latitude <= lake.latitude <= max_latitude
+    #     )
+    # ]
     
-#     with Session(engine) as session:
-#         statement = select(Lake)
+    with Session(engine) as session:
+        statement = select(Lake)
         
-#         if min_surface_area:
-#             statement = statement.where(Lake.surface_area_m2 >= min_surface_area)
+        if min_surface_area:
+            statement = statement.where(Lake.surface_area_m2 >= min_surface_area)
         
-#         if max_surface_area:
-#             statement = statement.where(Lake.surface_area_m2 <= max_surface_area)
+        if max_surface_area:
+            statement = statement.where(Lake.surface_area_m2 <= max_surface_area)
         
-#         lakes = session.exec(statement.limit(10)).all()
-#         print(lakes)
+        lakes = session.exec(statement.limit(10)).all()
+        print(lakes)
 
-#     return lakes
+    return lakes
     
     
 handler = Mangum(app, lifespan="off")
