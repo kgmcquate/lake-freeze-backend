@@ -6,8 +6,8 @@ Resources:
         Properties:
             FunctionName: lake-freeze-api
             Runtime: python3.9
-            CodeUri: LakeFreezeApi
-            Handler: handler
+            CodeUri: LakeFreezeApi/
+            Handler: main.handler
             
             Timeout: 300
             MemorySize: 128

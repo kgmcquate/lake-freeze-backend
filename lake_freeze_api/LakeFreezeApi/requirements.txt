@@ -1,6 +1,6 @@
 fastapi
 pydantic
-mangum
+mangum >= 0.17.0
 sqlalchemy
 psycopg2-binary
 boto3

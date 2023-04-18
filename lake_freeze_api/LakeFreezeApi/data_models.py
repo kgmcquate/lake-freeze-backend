@@ -1,6 +1,6 @@
 from typing import Optional
 from sqlmodel import Field, Session, SQLModel
-from .database import engine
+from database import engine
 
 # @dataclass
 # class Lake:
