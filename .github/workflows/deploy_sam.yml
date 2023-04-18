@@ -32,7 +32,7 @@ jobs:
 
 
     - name: SAM build
-      run: cd lake_freeze_api/ && sam build
+      run: ls && cd lake_freeze_api/ && sam build
       
     - name: SAM build
       run: sam deploy
