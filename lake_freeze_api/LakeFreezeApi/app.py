@@ -6,8 +6,8 @@ import json
 import boto3
 from typing import Optional
 
-from .data_models import Lake
-from .database import engine
+from data_models import Lake
+from database import engine
 
 app = FastAPI()
 
