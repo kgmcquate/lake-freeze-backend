@@ -1,0 +1,1 @@
+docker run --network=host -v /home/ec2-user/environment/lake-freeze-backend/:/root/lake-freeze-backend/ -it python:3.9 bash 
