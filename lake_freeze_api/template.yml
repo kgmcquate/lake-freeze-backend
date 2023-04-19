@@ -24,5 +24,9 @@ Resources:
                   Properties:
                     Path: /{proxy+}
                     Method: ANY
+            
+            VpcConfig:
+                SecurityGroupIds:
+                    - sg-060b4a344f401f428
                     
     
