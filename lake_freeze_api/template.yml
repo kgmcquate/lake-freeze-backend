@@ -4,7 +4,7 @@ Resources:
     LakeFreezeApi:
         Type: AWS::Serverless::Function
         Properties:
-            FunctionName: lake-freeze-api
+            FunctionName: lake-freeze-backend
             Runtime: python3.9
             CodeUri: LakeFreezeApi/
             Handler: main.handler

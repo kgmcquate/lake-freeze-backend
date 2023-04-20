@@ -5,15 +5,10 @@ import pandas as pd
 import boto3
 import json
 import sqlalchemy
-from sqlalchemy.sql import text
-
-
-
-from sqlalchemy import  MetaData, Table, Column, Integer, String, Float
-
-
 import sqlmodel
-import json
+
+
+
 import os
 import boto3
 
