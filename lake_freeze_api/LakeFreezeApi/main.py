@@ -78,7 +78,7 @@ def get_lakes(
         if max_surface_area:
             statement = statement.where(Lake.surface_area_m2 <= max_surface_area)
         print("executing statement")
-        lakes = session.exec(statement.limit(10)).all()
+        lakes = session.exec(statement).all()
         print("executed statement")
         print(lakes)
 
