@@ -7,7 +7,7 @@ import boto3
 from typing import Optional
 
 from data_models import Lake
-from database import engine
+
 
 app = FastAPI()
 
@@ -54,6 +54,8 @@ def get_lakes(
         min_longitude: float = -180.0,
         max_longitude: float = 180.0
     ):
+        
+    from database import engine
     
     # filtered_lakes = [
     #     lake
