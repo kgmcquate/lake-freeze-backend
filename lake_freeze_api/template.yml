@@ -32,3 +32,26 @@ Resources:
                   - subnet-c9fca384
                   - subnet-3266ee6d
                   - subnet-29b33c4f
+                  
+  #   DBProxy:
+  #     Type: AWS::RDS::DBProxy
+  #     Properties:
+  #         DBProxyName: rds-proxy
+  #         EngineFamily: POSTGRESQL
+  #         RoleArn: arn:aws:iam::117819748843:role/lake-freeze-lambda-role
+  #         RequireTLS: true
+  #         Auth:
+  #             - {AuthScheme: SECRETS, SecretArn: arn:aws:secretsmanager:us-east-1:117819748843:secret:rds-lake-freeze-credentials-5gwihC, IAMAuth: ENABLED}
+  #         VpcSubnetIds:
+  #             - subnet-c9fca384
+  #             - subnet-3266ee6d
+  #             - subnet-29b33c4f
+
+  # ProxyTargetGroup: 
+  #     Type: AWS::RDS::DBProxyTargetGroup
+  #     Properties:
+  #         DbProxyName: !Ref DBProxy
+  #         TargetGroupName: default
+  #         InstanceIdentifiers: 
+  #             - tf-20230418030022168000000001 # Name of your RDS instance
+  #     DependsOn: DBProxy
