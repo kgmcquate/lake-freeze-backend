@@ -27,6 +27,6 @@ Resources:
             
             VpcConfig:
                 SecurityGroupIds:
-                    - sg-060b4a344f401f428
+                    - sg-e0fa90d6
                     
     
