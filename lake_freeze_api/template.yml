@@ -45,11 +45,11 @@ Resources:
                   - subnet-3266ee6d
                   - subnet-29b33c4f
                   
-    TLSCertificate:
-        Type: AWS::CertificateManager::Certificate
-        Properties:
-            DomainName: !Ref DomainName
-            ValidationMethod: DNS
+#     TLSCertificate:
+#         Type: AWS::CertificateManager::Certificate
+#         Properties:
+#             DomainName: !Ref DomainName
+#             ValidationMethod: DNS
     
     ApiGateway:
         Type: AWS::Serverless::Api
@@ -57,7 +57,7 @@ Resources:
             StageName: prod
             Domain:
               DomainName: !Ref DomainName
-              CertificateArn: !Ref TLSCertificate
+#               CertificateArn: !Ref TLSCertificate
               EndpointConfiguration: REGIONAL
               Route53:
                 HostedZoneId: !Ref DomainHostedZoneId
