@@ -54,14 +54,13 @@ Resources:
     ApiGateway:
         Type: AWS::Serverless::Api
         Properties:
-        StageName: prod      
-    
-        Domain:
-          DomainName: !Ref DomainName
-          CertificateArn: !Ref TLSCertificate
-          EndpointConfiguration: REGIONAL
-          Route53:
-            HostedZoneId: !Ref DomainHostedZoneId
+            StageName: prod
+            Domain:
+              DomainName: !Ref DomainName
+              CertificateArn: !Ref TLSCertificate
+              EndpointConfiguration: REGIONAL
+              Route53:
+                HostedZoneId: !Ref DomainHostedZoneId
                   
   #   DBProxy:
   #     Type: AWS::RDS::DBProxy
