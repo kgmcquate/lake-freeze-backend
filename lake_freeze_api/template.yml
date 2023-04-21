@@ -1,5 +1,15 @@
 AWSTemplateFormatVersion : '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+    DomainName:
+        Type: String
+        Default: kevin-mcquate.net
+        
+    DomainHostedZoneId:
+        Type: String
+        Default: Z028090523Q7W6VMX59IC
+
 Resources:
     LakeFreezeApi:
         Type: AWS::Serverless::Function
@@ -19,11 +29,13 @@ Resources:
                   Properties:
                     Path: /
                     Method: ANY
+                    RestApiId: !Ref ApiGateway
                 Api:
                   Type: Api
                   Properties:
                     Path: /{proxy+}
                     Method: ANY
+                    RestApiId: !Ref ApiGateway
             
             VpcConfig:
                 SecurityGroupIds:
@@ -32,6 +44,24 @@ Resources:
                   - subnet-c9fca384
                   - subnet-3266ee6d
                   - subnet-29b33c4f
+                  
+    TLSCertificate:
+        Type: AWS::CertificateManager::Certificate
+        Properties:
+            DomainName: !Ref DomainName
+            ValidationMethod: DNS
+    
+    ApiGateway:
+        Type: AWS::Serverless::Api
+        Properties:
+        StageName: prod      
+    
+        Domain:
+          DomainName: !Ref DomainName
+          CertificateArn: !Ref TLSCertificate
+          EndpointConfiguration: REGIONAL
+          Route53:
+            HostedZoneId: !Ref DomainHostedZoneId
                   
   #   DBProxy:
   #     Type: AWS::RDS::DBProxy
