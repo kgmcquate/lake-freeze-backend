@@ -6,8 +6,8 @@ import boto3
 import json
 import sqlalchemy
 import sqlmodel
-
-
+from sqlmodel import SQLModel, Field
+from typing import Optional
 
 import os
 import boto3
@@ -26,8 +26,24 @@ db_username = secret["username"]
 
 db_password = secret["password"]
 
-engine = sqlmodel.create_engine(f'postgresql+psycopg2://{db_username}:{db_password}@{db_endpoint}') #/lake_freeze
+engine = sqlmodel.create_engine(f'postgresql+psycopg2://{db_username}:{db_password}@{db_endpoint}', echo=True) #/lake_freeze
 
+
+class Lake(SQLModel, table=True):
+    __tablename__ = "lakes"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    lake_name: str
+    nearby_city_name: str = None
+    state_or_province: str = None
+    country: str = None
+    latitude: float = None
+    longitude: float = None
+    max_depth_m: float
+    surface_area_m2: float
+
+SQLModel.metadata.create_all(engine)
+    
 
 
 # ['lake', 'nearby_town', 'size(acres)',  'max_depth(ft)']
@@ -102,12 +118,19 @@ for state in states:
     
     df['max_depth_m'] = df['max_depth(ft)'] * 0.3048
     
-    df['name'] = df['lake']
+    df['lake_name'] = df['lake']
     df['index'] = df.index
+
+    df['nearby_city_name'] = df['nearby_town']
+    df['state_or_province'] = state.lower()
+    df['country'] = 'USA'
     
-    df = df[['name', 'nearby_town', 'surface_area_m2',  'max_depth_m']]
+    
+    df = df[['lake_name', 'nearby_city_name', 'state_or_province', 'country', 'latitude', 'longitude', 'max_depth_m', 'surface_area_m2']]
     
     print(df.head())
 
     df.to_sql(name='lakes', con=engine, if_exists='replace', index=True, index_label='id')
+
+
 
