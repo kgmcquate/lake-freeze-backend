@@ -8,6 +8,7 @@ import sqlalchemy
 import sqlmodel
 from sqlmodel import SQLModel, Field
 from typing import Optional
+import string
 
 import os
 import boto3
@@ -95,10 +96,18 @@ for state in states:
     
     df['max_depth_m'] = df['max_depth(ft)'] * 0.3048
     
-    df['lake_name'] = df['lake']
+    df['lake_name'] = df['lake'].apply(lambda x: x.lower())
     df['index'] = df.index
+    
+    
+    
+    def validate_name(name):
+        for c in name:
+            if c not in string.ascii_letters + " ":
+                return None
+        return name
 
-    df['nearby_city_name'] = df['nearby_town']
+    df['nearby_city_name'] = df['nearby_town'].apply(lambda x: x.lower()).apply(validate_name)
     df['state_or_province'] = state.lower()
     df['country'] = 'USA'
     
@@ -107,6 +116,8 @@ for state in states:
     df['longitude'] = None
     df['nearby_city_latitude'] = None
     df['nearby_city_longitude'] = None
+    
+    
     
     df = df[['lake_name', 'latitude', 'longitude', 'nearby_city_name', 'state_or_province', 'country','nearby_city_latitude', 'nearby_city_longitude', 'max_depth_m', 'surface_area_m2']]
     

@@ -4,6 +4,7 @@ import datetime
 
 from sqlmodel import Session, select
 
+from dataclasses import dataclass
 
 class Lake(SQLModel, table=True):
     __tablename__ = "lakes"
@@ -27,7 +28,7 @@ class WeatherByDay(SQLModel, table=True):
     date: datetime.date = Field(primary_key=True)
     latitude: float = Field(primary_key=True)
     longitude: float = Field(primary_key=True)
-    city_name: str
+    nearby_city_name: str
     state_or_province: str 
     country: str
     max_temp_c: float
@@ -38,3 +39,12 @@ class WeatherByDay(SQLModel, table=True):
     avg_visibility_km: float
     avg_humidity: float
     uv: float
+    
+
+@dataclass  
+class Location():
+    latitude: float = None
+    longitude: float = None
+    nearby_city_name: str = None
+    state_or_province: str = None
+    country: str = None

@@ -27,7 +27,7 @@ class WeatherByDay(SQLModel, table=True):
     date: datetime.date = Field(primary_key=True)
     latitude: float = Field(primary_key=True)
     longitude: float = Field(primary_key=True)
-    city_name: str
+    nearby_city_name: str
     state_or_province: str 
     country: str
     max_temp_c: float

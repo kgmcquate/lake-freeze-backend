@@ -10,11 +10,11 @@ db_endpoint = os.environ.get("DB_ENDPOINT" , "lake-freeze-backend-db.cluster-cu0
 
 
 # print("getting creds from sm")
-secret = json.loads(
-        boto3.client("secretsmanager", 'us-east-1')
-        .get_secret_value(SecretId=secret_arn)
-        ["SecretString"]
-)
+# secret = json.loads(
+#         boto3.client("secretsmanager", 'us-east-1')
+#         .get_secret_value(SecretId=secret_arn)
+#         ["SecretString"]
+# )
 
 # db_username = secret["username"]
 

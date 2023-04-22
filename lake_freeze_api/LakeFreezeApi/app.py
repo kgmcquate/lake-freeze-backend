@@ -52,7 +52,8 @@ def get_lakes(
         min_latitude: float = -90.0,
         max_latitude: float = 90.0,
         min_longitude: float = -180.0,
-        max_longitude: float = 180.0
+        max_longitude: float = 180.0,
+        limit: int = 100
     ):
         
     from database import engine
@@ -78,6 +79,9 @@ def get_lakes(
         if max_surface_area:
             statement = statement.where(Lake.surface_area_m2 <= max_surface_area)
         print("executing statement")
+        
+        statement = statement.limit(limit)
+        
         lakes = session.exec(statement).all()
         print("executed statement")
         print(lakes)

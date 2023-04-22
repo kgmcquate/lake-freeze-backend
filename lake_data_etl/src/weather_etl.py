@@ -9,20 +9,15 @@ import datetime
 
 from sqlmodel import Session, select
 
-from data_models import Lake, WeatherByDay
+from data_models import Lake, WeatherByDay, Location
 
 from database import engine
 
+import pandas as pd
 
 
 base_url = "http://api.weatherapi.com/v1/history.json"
 
-
-secret = json.loads(
-        boto3.client("secretsmanager", 'us-east-1')
-        .get_secret_value(SecretId=secret_arn)
-        ["SecretString"]
-)
 
 api_key = "f05c945b0eb94da580d222013232104" # secret["key"]
 
@@ -59,7 +54,7 @@ def get_weather_data(lake: Lake, date: datetime.date):
                             
         weather_by_day = WeatherByDay(
                 date=date,
-                city_name=coalesce(
+                nearby_city_name=coalesce(
                         lake.nearby_city_name, 
                         resp['location']['name'].lower()
                 ),
@@ -90,7 +85,6 @@ def get_weather_data(lake: Lake, date: datetime.date):
 # SQLModel.metadata.create_all(engine)
 
 lakes = []
-
 with Session(engine) as session:
         statement = select(Lake)
         
@@ -98,16 +92,43 @@ with Session(engine) as session:
         lakes = session.exec(statement).all()
 
 
+
+print(lakes)
+
 weather_by_days = []
-for lake in lakes:
-        weather_by_days.append(
-                get_weather_data(lake, datetime.datetime.today().date())
-        )
+
+base = datetime.datetime.today().date()
+date_list = [base - datetime.timedelta(days=x) for x in range(60)]
+
+for date in date_list:
+        for lake in lakes:
+                print(f"getting data for {lake}")
+                
+                wd = get_weather_data(lake, date)
+                
+                print(wd.nearby_city_name)
+                
+                weather_by_days.append(
+                        wd
+                )
+        
+
 
 print(weather_by_days)
 
-with Session(engine) as session:
-        for w in weather_by_days:
-                session.add(w)
+
+from sqlalchemy.dialects.postgresql import insert
+
+
+
+
+with engine.connect() as conn:
+        for wd in weather_by_days:
+                stmt = insert(WeatherByDay).values(wd.dict())
+                stmt = stmt.on_conflict_do_nothing()  #left anti join for insert
+                result = conn.execute(stmt)
+                conn.commit()
         
-        session.flush()
+  
+        
+
