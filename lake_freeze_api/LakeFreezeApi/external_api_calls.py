@@ -1,9 +1,9 @@
 import datetime
 
-from data_models import Lake
+from data_models import Lake, WeatherByDay
 
 
-def get_weather_data(latitude: float, longitude: float, date: datetime.date):
+def get_weather_data(latitude: float, longitude: float, date: datetime.date) -> WeatherByDay:
     def coalesce(val1, val2):
         if val1 is not None:
                 return val1
