@@ -15,7 +15,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: lake-freeze-api
-            Runtime: python3.9
+            Runtime: python3.10
             CodeUri: LakeFreezeApi/
             Handler: main.handler
             
@@ -29,13 +29,13 @@ Resources:
                   Properties:
                     Path: /
                     Method: ANY
-                    RestApiId: !Ref ApiGateway
+                    # RestApiId: !Ref ApiGateway
                 Api:
                   Type: Api
                   Properties:
                     Path: /{proxy+}
                     Method: ANY
-                    RestApiId: !Ref ApiGateway
+                    # RestApiId: !Ref ApiGateway
             
             VpcConfig:
                 SecurityGroupIds:
@@ -51,16 +51,16 @@ Resources:
 #             DomainName: !Ref DomainName
 #             ValidationMethod: DNS
     
-    ApiGateway:
-        Type: AWS::Serverless::Api
-        Properties:
-            StageName: prod
-            Domain:
-              DomainName: !Ref DomainName
-#               CertificateArn: !Ref TLSCertificate
-              EndpointConfiguration: REGIONAL
-              Route53:
-                HostedZoneId: !Ref DomainHostedZoneId
+#     ApiGateway:
+#         Type: AWS::Serverless::Api
+#         Properties:
+#             StageName: prod
+#             Domain:
+#               DomainName: !Ref DomainName
+# #               CertificateArn: !Ref TLSCertificate
+#               EndpointConfiguration: REGIONAL
+#               Route53:
+#                 HostedZoneId: !Ref DomainHostedZoneId
                   
   #   DBProxy:
   #     Type: AWS::RDS::DBProxy

@@ -16,16 +16,18 @@ secret_arn = os.environ.get("DB_CREDS_SECRET_ARN", "arn:aws:secretsmanager:us-ea
 
 db_endpoint = os.environ.get("DB_ENDPOINT" , "lake-freeze-backend-db.cluster-cu0bcthnum69.us-east-1.rds.amazonaws.com")
 
-secret = json.loads(
-        boto3.client("secretsmanager", 'us-east-1')
-        .get_secret_value(SecretId=secret_arn)
-        ["SecretString"]
-)
+print("loading creds")
+# secret = json.loads(
+#         boto3.client("secretsmanager", 'us-east-1')
+#         .get_secret_value(SecretId=secret_arn)
+#         ["SecretString"]
+# )
 
-db_username = secret["username"]
+db_username = "postgres" #secret["username"]
 
-db_password = secret["password"]
+db_password = "m9Zo5DbX" #secret["password"]
 
+print("creating engine")
 engine = sqlmodel.create_engine(f'postgresql+psycopg2://{db_username}:{db_password}@{db_endpoint}', echo=True) #/lake_freeze
 
 
@@ -39,11 +41,14 @@ class Lake(SQLModel, table=True):
     country: str = None
     latitude: float = None
     longitude: float = None
-    max_depth_m: float
-    surface_area_m2: float
+    max_depth_m: float = None
+    surface_area_m2: float = None
 
+Lake.__table__.drop(engine)
+
+print("creating tables")
 SQLModel.metadata.create_all(engine)
-    
+print("created tables")
 
 
 # ['lake', 'nearby_town', 'size(acres)',  'max_depth(ft)']
@@ -126,11 +131,14 @@ for state in states:
     df['country'] = 'USA'
     
     
+    df['latitude'] = None
+    df['longitude'] = None
+    
     df = df[['lake_name', 'nearby_city_name', 'state_or_province', 'country', 'latitude', 'longitude', 'max_depth_m', 'surface_area_m2']]
     
     print(df.head())
 
-    df.to_sql(name='lakes', con=engine, if_exists='replace', index=True, index_label='id')
+    df.to_sql(name='lakes', con=engine, if_exists='append', index=True, index_label='id')
 
 
 
