@@ -10,19 +10,19 @@ db_endpoint = os.environ.get("DB_ENDPOINT" , "lake-freeze-backend-db.cluster-cu0
 
 
 # print("getting creds from sm")
-# secret = json.loads(
-#         boto3.client("secretsmanager", 'us-east-1')
-#         .get_secret_value(SecretId=secret_arn)
-#         ["SecretString"]
-# )
+secret = json.loads(
+        boto3.client("secretsmanager", 'us-east-1')
+        .get_secret_value(SecretId=secret_arn)
+        ["SecretString"]
+)
 
-# db_username = secret["username"]
+db_username = secret["username"]
 
-# db_password = secret["password"]
+db_password = secret["password"]
 
-db_username = "postgres" #secret["username"]
+# db_username = "postgres" #secret["username"]
 
-db_password = "m9Zo5DbX" #secret["password"]
+# db_password = "m9Zo5DbX" #secret["password"]
 
 
 # aws_access_key_id = 'ASIARW3U2WHVQJ2AJY4X'

@@ -92,7 +92,6 @@ with Session(engine) as session:
         lakes = session.exec(statement).all()
 
 
-
 print(lakes)
 
 weather_by_days = []
@@ -100,8 +99,8 @@ weather_by_days = []
 base = datetime.datetime.today().date()
 date_list = [base - datetime.timedelta(days=x) for x in range(60)]
 
-for date in date_list:
-        for lake in lakes:
+for date in date_list[:1]:
+        for lake in lakes[:1]:
                 print(f"getting data for {lake}")
                 
                 wd = get_weather_data(lake, date)
@@ -118,9 +117,6 @@ print(weather_by_days)
 
 
 from sqlalchemy.dialects.postgresql import insert
-
-
-
 
 with engine.connect() as conn:
         for wd in weather_by_days:

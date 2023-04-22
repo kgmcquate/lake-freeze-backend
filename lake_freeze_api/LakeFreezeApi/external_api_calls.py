@@ -24,9 +24,9 @@ def get_weather_data(latitude: float, longitude: float, date: datetime.date):
     
     
     # make sure its pulling from the correct location
-    assert  == abs(latitude - resp['location']['lat']) < 0.001
+    assert abs(latitude - resp['location']['lat']) < 0.001
     
-    assert  == abs(longitude - resp['location']['lon']) < 0.001
+    assert abs(longitude - resp['location']['lon']) < 0.001
     
     weather_by_day = WeatherByDay(
             date=date,
