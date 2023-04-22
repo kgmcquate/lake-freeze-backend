@@ -75,22 +75,28 @@ def get_hourly_data(lake: Lake, date: datetime.date):
                                     "dt": str(date)
                                     }
                             )
-        WeatherByDay(date=date,
-                     nearby_city_name=coalesce(
-                                                lake.nearby_city_name, 
-                                               resp['location']['name'].lower()
-                                               ),
-                     state_or_province=coalesce(
-                                                lake.state_or_province,
-                                                resp['location']['region'].lower()
-                                                ),
-                     country=coalesce(
-                                                lake.country,
-                                                resp['location']['country'].lower()
-                                                )
-                     latitude=coalesce(lake.latitude, resp['location']['lat']),
-                     longitude=coalesce(lake.longitude, resp['location']['lon']),
-                     max_temp_c=resp['forecast']['forecastday'][0]['day']['maxtemp_c'],
-                     min_temp_c=resp['forecast']['forecastday'][0]['day']['mintemp_c'],
-                     avg_temp_c=resp['forecast']['forecastday'][0]['day']['avgtemp_c'],
-                     )
+        return WeatherByDay(
+                date=date,
+                nearby_city_name=coalesce(
+                        lake.nearby_city_name, 
+                        resp['location']['name'].lower()
+                ),
+                state_or_province=coalesce(
+                        lake.state_or_province,
+                        resp['location']['region'].lower()
+                ),
+                country=coalesce(
+                        lake.country,
+                        resp['location']['country'].lower()
+                ),
+                latitude=coalesce(lake.latitude, resp['location']['lat']),
+                longitude=coalesce(lake.longitude, resp['location']['lon']),
+                max_temp_c=resp['forecast']['forecastday'][0]['day']['maxtemp_c'],
+                min_temp_c=resp['forecast']['forecastday'][0]['day']['mintemp_c'],
+                avg_temp_c=resp['forecast']['forecastday'][0]['day']['avgtemp_c'],
+                max_wind_kph=resp['forecast']['forecastday'][0]['day']['maxwind_kph'],
+                total_precip_mm=resp['forecast']['forecastday'][0]['day']['totalprecip_mm'],
+                avg_visibility_km=resp['forecast']['forecastday'][0]['day']['avgvis_km'],
+                avg_humidity=resp['forecast']['forecastday'][0]['day']['avghumidity'],
+                uv=resp['forecast']['forecastday'][0]['day']['uv']
+        )
