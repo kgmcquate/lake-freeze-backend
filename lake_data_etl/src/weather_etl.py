@@ -18,11 +18,11 @@ from database import engine
 base_url = "http://api.weatherapi.com/v1/history.json"
 
 
-# secret = json.loads(
-#         boto3.client("secretsmanager", 'us-east-1')
-#         .get_secret_value(SecretId=secret_arn)
-#         ["SecretString"]
-# )
+secret = json.loads(
+        boto3.client("secretsmanager", 'us-east-1')
+        .get_secret_value(SecretId=secret_arn)
+        ["SecretString"]
+)
 
 api_key = "f05c945b0eb94da580d222013232104" # secret["key"]
 
@@ -30,6 +30,7 @@ db_username = "postgres" #secret["username"]
 
 db_password = "m9Zo5DbX" #secret["password"]
 
+# WeatherByDay.__table__.drop(engine)
 
 
 def get_weather_data(lake: Lake, date: datetime.date):
@@ -39,11 +40,15 @@ def get_weather_data(lake: Lake, date: datetime.date):
                 else:
                         return val2 
 
-
-        if lake.nearby_city_name is not None and lake.state_or_province is not None:
-                query = f"{lake.nearby_city_name},{lake.state_or_province}"
-        else:
-                query = f"{lake.latitiude},{lake.longitude}"
+        # if lake.latitiude is not None and lake.longitude is not None:
+        #         query = f"{lake.latitiude},{lake.longitude}"
+                
+        # elif lake.nearby_city_name is not None and lake.state_or_province is not None:
+        #         query = f"{lake.nearby_city_name},{lake.state_or_province}"
+        # else:
+                
+        query = f"{lake.nearby_city_name},{lake.state_or_province}"
+                
 
         resp = requests.get(base_url, 
                             params={"key": api_key, 
@@ -54,7 +59,7 @@ def get_weather_data(lake: Lake, date: datetime.date):
                             
         weather_by_day = WeatherByDay(
                 date=date,
-                nearby_city_name=coalesce(
+                city_name=coalesce(
                         lake.nearby_city_name, 
                         resp['location']['name'].lower()
                 ),
