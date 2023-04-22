@@ -35,9 +35,6 @@ app = FastAPI()
 def get_home_page():
     return """
     <html>
-        <head>
-            <title>Hello World</title>
-        </head>
         <body>
          Hello World
         </body>
