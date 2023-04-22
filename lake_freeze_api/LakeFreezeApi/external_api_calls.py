@@ -33,8 +33,8 @@ def get_weather_data(latitude: float, longitude: float, date: datetime.date) -> 
             nearby_city_name=resp['location'].get('name').lower(),
             state_or_province=resp['location'].get('region').lower(),
             country= resp['location'].get('country').lower(),
-            latitude=latitude
-            longitude=longitude, 
+            latitude=latitude,
+            longitude=longitude,
             max_temp_c=resp['forecast']['forecastday'][0]['day']['maxtemp_c'],
             min_temp_c=resp['forecast']['forecastday'][0]['day']['mintemp_c'],
             avg_temp_c=resp['forecast']['forecastday'][0]['day']['avgtemp_c'],
