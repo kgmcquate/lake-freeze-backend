@@ -40,7 +40,7 @@ class WeatherByDay(SQLModel, table=True):
     uv: float
     
     
-class LakeFreezeReport(SQLModel, table=true):
+class LakeFreezeReport(SQLModel, table=True):
     __tablename__ = "lake_freeze_reports"
     
     lake_id: int = Field(primary_key=True)
