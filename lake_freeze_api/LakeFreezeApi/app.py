@@ -76,8 +76,8 @@ def get_lake_freeze_reports(
         
     statement = select(WeatherByDay) \
         .where(WeatherByDay.latitude == lake.latitude) \
-        .where(WeatherByDay.longitude == lake.longitude) \
-        .where(WeatherByDay.date in weather_dates)
+        .where(WeatherByDay.longitude == lake.longitude) #\
+        # .where(WeatherByDay.date in weather_dates)
     
     weathers: list[WeatherByDay] = session.exec(statement).all()
     
