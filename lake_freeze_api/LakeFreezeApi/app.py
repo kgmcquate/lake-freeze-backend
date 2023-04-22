@@ -1,34 +1,19 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from sqlmodel import Session, select
+from sqlalchemy.dialects.postgresql import insert
 from mangum import Mangum
 import json
 import boto3
 from typing import Optional
+import datetime
 
-from data_models import Lake
-
+from data_models import Lake, WeatherByDay
+from external_api_calls import get_weather_data
 
 app = FastAPI()
 
-# lakes = [
-#     Lake(
-#         "Bde Maka Ska",
-#         "123",
-#         44.9421125,
-#         -93.3171757,
-#         1620000.0,
-#         9.1
-#     ),
-#     Lake(
-#         "test",
-#         "345",
-#         0,
-#         0,
-#         1620000.0,
-#         9.1
-#     )
-# ]
+from database import engine
 
 
 @app.get("/home", response_class=HTMLResponse)
@@ -53,18 +38,6 @@ def get_lakes(
         limit: int = 100
     ):
         
-    from database import engine
-    
-    # filtered_lakes = [
-    #     lake
-    #     for lake in lakes
-    #     if (
-    #         min_longitude <= lake.longitude <= max_longitude
-    #     ) and (
-    #         min_latitude <= lake.latitude <= max_latitude
-    #     )
-    # ]
-    
     print("creating session")
     
     with Session(engine) as session:
@@ -84,6 +57,59 @@ def get_lakes(
         print(lakes)
 
     return lakes
+    
+    
+
+@app.get("/lake_freeze_reports")
+def get_lake_freeze_reports(
+        lake_id: int, 
+        date: datetime.date = datetime.datetime.today().date()
+    ) -> list[WeatherByDay]:
+            
+    WEATHER_LOOKBACK_DAYS = 30
+    
+    weather_dates = (date - datetime.timedelta(days=x) for x in range(WEATHER_LOOKBACK_DAYS) )
+    
+    with Session(engine) as session:
+        lake: Lake = session.get(Lake, lake_id)
+        
+        
+    statement = select(WeatherByDay) \
+        .where(WeatherByDay.latitude == lake.latitude and WeatherByDay.longitude == lake.longitude) \
+        .where(WeatherByDay.date in weather_dates)
+    
+    weathers: list[WeatherByDay] = session.exec(statement).all()
+    
+    existing_weather_dates = [w.date for w in weathers]
+    
+    # If not all data is present, get it from the weather api and store it in the db
+    dates_to_get = []
+    for weather_date in weather_dates:
+        if weather_date not in existing_weather_dates:
+            dates_to_get.append(weather_date)
+    
+    if len(dates_to_get):
+        new_weathers = []
+        for d in dates_to_get:
+            new_weathers.append(
+                get_weather_data()
+            )
+            
+        # with Session(engine) as session:  # Will this error out if the primary keys arent unique?
+        #     session.add_all(new_weathers)
+        
+        with engine.connect() as conn:
+            for wd in new_weathers:
+                stmt = insert(WeatherByDay).values(wd.dict())
+                stmt = stmt.on_conflict_do_nothing()  #left anti join for insert
+                result = conn.execute(stmt)
+                conn.commit()
+                
+        # Add new weathers in
+        weathers += new_weathers
+        
+    return weathers
+
     
     
 handler = Mangum(app, lifespan="off")

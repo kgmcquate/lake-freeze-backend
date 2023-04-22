@@ -38,3 +38,14 @@ class WeatherByDay(SQLModel, table=True):
     avg_visibility_km: float
     avg_humidity: float
     uv: float
+    
+    
+class LakeFreezeReport(SQLModel, table=true):
+    __tablename__ = "lake_freeze_reports"
+    
+    lake_id: int = Field(primary_key=True)
+    date: datetime.date = Field(primary_key=True)
+    ice_m: float
+    is_frozen: bool
+    
+    
