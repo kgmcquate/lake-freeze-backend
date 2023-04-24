@@ -1,6 +1,25 @@
 import datetime
-
+import requests
 from data_models import Lake, WeatherByDay
+import boto3
+import json
+import os
+
+weather_base_url = "http://api.weatherapi.com/v1/history.json"
+
+
+api_key = "f05c945b0eb94da580d222013232104"
+
+
+weather_api_key_secret_arn = os.environ.get("WEATHER_API_KEY_SECRET" , "arn:aws:secretsmanager:us-east-1:117819748843:secret:weather-api-credentials-Fp6sTu")
+
+weather_api_secret = json.loads(
+        boto3.client("secretsmanager", 'us-east-1')
+        .get_secret_value(SecretId=weather_api_key_secret_arn)
+        ["SecretString"]
+)
+
+weather_api_ket = weather_api_secret["key"]
 
 
 def get_weather_data(latitude: float, longitude: float, date: datetime.date) -> WeatherByDay:
@@ -15,7 +34,7 @@ def get_weather_data(latitude: float, longitude: float, date: datetime.date) -> 
             
 
     resp = requests.get(
-            base_url, 
+            weather_base_url, 
             params={"key": api_key, 
                     "q": query, 
                     "dt": str(date)
