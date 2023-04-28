@@ -61,7 +61,7 @@ Resources:
       StageName: prod
       Domain:
         DomainName: !Ref DomainName
-        CertificateArn: !Ref TLSCertificate
+        CertificateArn: !Ref DomainTLSCertificateARN
         EndpointConfiguration: REGIONAL
         Route53:
           HostedZoneId: !Ref DomainHostedZoneId
