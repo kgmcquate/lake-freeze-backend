@@ -1,67 +1,71 @@
-AWSTemplateFormatVersion : '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 
 Parameters:
-    DomainName:
-        Type: String
-        Default: kevin-mcquate.net
-        
-    DomainHostedZoneId:
-        Type: String
-        Default: Z028090523Q7W6VMX59IC
+  DomainName:
+    Type: String
+    Default: kevin-mcquate.net
+
+  DomainTLSCertificateARN:
+    Type: String
+    Default: arn:aws:acm:us-east-1:117819748843:certificate/7d99c9a9-0cf8-4500-9c6b-31bb519c69c1
+
+  DomainHostedZoneId:
+    Type: String
+    Default: Z028090523Q7W6VMX59IC
 
 Resources:
-    LakeFreezeApi:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName: lake-freeze-api
-            Runtime: python3.9
-            CodeUri: LakeFreezeApi/
-            Handler: app.handler
-            
-            Timeout: 300
-            MemorySize: 128
-            Role: !Sub arn:aws:iam::${AWS::AccountId}:role/lake-freeze-lambda-role
-                
-            Events:
-                Root:
-                  Type: Api
-                  Properties:
-                    Path: /
-                    Method: ANY
-                    # RestApiId: !Ref ApiGateway
-                Api:
-                  Type: Api
-                  Properties:
-                    Path: /{proxy+}
-                    Method: ANY
-                    # RestApiId: !Ref ApiGateway
-            
-            VpcConfig:
-                SecurityGroupIds:
-                  - sg-e0fa90d6
-                SubnetIds:
-                  - subnet-c9fca384
-                  - subnet-3266ee6d
-                  - subnet-29b33c4f
-                  
-#     TLSCertificate:
-#         Type: AWS::CertificateManager::Certificate
-#         Properties:
-#             DomainName: !Ref DomainName
-#             ValidationMethod: DNS
-    
-#     ApiGateway:
-#         Type: AWS::Serverless::Api
-#         Properties:
-#             StageName: prod
-#             Domain:
-#               DomainName: !Ref DomainName
-# #               CertificateArn: !Ref TLSCertificate
-#               EndpointConfiguration: REGIONAL
-#               Route53:
-#                 HostedZoneId: !Ref DomainHostedZoneId
-                  
+  LakeFreezeApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: lake-freeze-api
+      Runtime: python3.9
+      CodeUri: LakeFreezeApi/
+      Handler: app.handler
+
+      Timeout: 300
+      MemorySize: 128
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/lake-freeze-lambda-role
+
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            Path: /
+            Method: ANY
+            # RestApiId: !Ref ApiGateway
+        Api:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+            # RestApiId: !Ref ApiGateway
+
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-e0fa90d6
+        SubnetIds:
+          - subnet-c9fca384
+          - subnet-3266ee6d
+          - subnet-29b33c4f
+
+  #     TLSCertificate:
+  #         Type: AWS::CertificateManager::Certificate
+  #         Properties:
+  #             DomainName: !Ref DomainName
+  #             ValidationMethod: DNS
+
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Domain:
+        DomainName: !Ref DomainName
+        CertificateArn: !Ref TLSCertificate
+        EndpointConfiguration: REGIONAL
+        Route53:
+          HostedZoneId: !Ref DomainHostedZoneId
+
   #   DBProxy:
   #     Type: AWS::RDS::DBProxy
   #     Properties:
@@ -76,11 +80,11 @@ Resources:
   #             - subnet-3266ee6d
   #             - subnet-29b33c4f
 
-  # ProxyTargetGroup: 
+  # ProxyTargetGroup:
   #     Type: AWS::RDS::DBProxyTargetGroup
   #     Properties:
   #         DbProxyName: !Ref DBProxy
   #         TargetGroupName: default
-  #         InstanceIdentifiers: 
+  #         InstanceIdentifiers:
   #             - tf-20230418030022168000000001 # Name of your RDS instance
   #     DependsOn: DBProxy
