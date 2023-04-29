@@ -5,5 +5,5 @@ sqlalchemy
 psycopg2-binary
 boto3
 sqlmodel
-
-uvicorn[standard]
+requests
+#uvicorn[standard]
