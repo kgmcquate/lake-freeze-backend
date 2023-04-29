@@ -97,7 +97,7 @@ print(lakes)
 weather_by_days = []
 
 base = datetime.datetime.today().date()
-date_list = [base - datetime.timedelta(days=x) for x in range(60)]
+date_list = [base - datetime.timedelta(days=x) for x in range(7)]
 
 for date in date_list[:1]:
         for lake in lakes[:1]:

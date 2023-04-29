@@ -1,6 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.responses import HTMLResponse
 from sqlmodel import Session, select
+from sqlalchemy.sql.operators import is_
 from sqlalchemy.dialects.postgresql import insert
 from mangum import Mangum
 import json
@@ -9,7 +10,8 @@ from typing import Optional
 import datetime
 
 from data_models import Lake, WeatherByDay, LakeFreezeReport
-from external_api_calls import get_weather_data
+from weather_api import get_weather_data
+from google_maps_api import update_latitude_and_longitude
 
 app = FastAPI()
 
@@ -34,6 +36,7 @@ def get_home_page():
 
 @app.get("/lakes")
 def get_lakes(
+        id: Optional[int] = None,
         min_surface_area: Optional[float] = None,
         max_surface_area: Optional[float] = None,
         min_latitude: float = -90.0,
@@ -45,6 +48,9 @@ def get_lakes(
             
     with Session(engine) as session:
         statement = select(Lake)
+
+        if id:
+            statement = statement.where(Lake.id == id)
         
         if min_surface_area:
             statement = statement.where(Lake.surface_area_m2 >= min_surface_area)
@@ -56,14 +62,44 @@ def get_lakes(
         
         lakes = session.exec(statement).all()
 
+
     return lakes
     
+
+@app.get("/lakes/update_lat_long")
+def update_lat_long(
+        limit: int = 1
+    ):
+    with Session(engine) as session:
+        statement = select(Lake).where(Lake.longitude.is_(None) | Lake.latitude.is_(None)).limit(limit)
+        lakes = session.exec(statement).all()
+
+    update_latitude_and_longitude(lakes)
+
+    return f"updated {len(lakes)}"
     
 
-@app.get("/lake_freeze_reports")
+def insert_weathers(weathers: list[WeatherByDay]):
+    with engine.connect() as conn:
+        for wd in weathers:
+            stmt = insert(WeatherByDay).values(wd.dict())
+            stmt = stmt.on_conflict_do_nothing()  #left anti join for insert
+            result = conn.execute(stmt)
+        conn.commit()
+
+def insert_lake_freeze_report(report: LakeFreezeReport):
+    with engine.connect() as conn:
+        stmt = insert(LakeFreezeReport).values(report.dict())
+        stmt = stmt.on_conflict_do_nothing()
+        result = conn.execute(stmt)
+    conn.commit()
+
+
+@app.get("/lake_freeze_reports/{lake_id}")
 def get_lake_freeze_reports(
         lake_id: int, 
-        date: datetime.date = datetime.datetime.today().date()
+        date: datetime.date = datetime.datetime.today().date(),
+        background_tasks: BackgroundTasks = None # Used for writing to DB after the response is returned
     )-> LakeFreezeReport:
 
     logger = logging.getLogger()
@@ -117,22 +153,11 @@ def get_lake_freeze_reports(
                     date=d
                 )
             )
-            
-        # with Session(engine) as session:  # Will this error out if the primary keys arent unique?
-        #     session.add_all(new_weathers)
         
-        with engine.connect() as conn:
-            for wd in new_weathers:
-                stmt = insert(WeatherByDay).values(wd.dict())
-                stmt = stmt.on_conflict_do_nothing()  #left anti join for insert
-                result = conn.execute(stmt)
-                conn.commit()
+        background_tasks.add_task(insert_weathers, new_weathers)
                 
         # Add new weathers in
         weathers += new_weathers
-
-    print("here")
-    print(weathers)
 
     ice_thickness_m = get_ice_thickness(lake=lake, date=date, weather_reports_by_day=weathers)
         
@@ -146,11 +171,7 @@ def get_lake_freeze_reports(
         is_frozen=False
     )
 
-    with engine.connect() as conn:
-        stmt = insert(LakeFreezeReport).values(report.dict())
-        stmt = stmt.on_conflict_do_nothing()
-        result = conn.execute(stmt)
-        conn.commit()
+    background_tasks.add_task(insert_lake_freeze_report, report)    
 
     return report
 

@@ -5,7 +5,7 @@ import boto3
 
 secret_arn = os.environ.get("DB_CREDS_SECRET_ARN", "arn:aws:secretsmanager:us-east-1:117819748843:secret:rds-lake-freeze-credentials-5gwihC")
 
-db_endpoint = os.environ.get("DB_ENDPOINT" , "lake-freeze-backend-db.cluster-cu0bcthnum69.us-east-1.rds.amazonaws.com")
+db_endpoint = os.environ.get("DB_ENDPOINT" , "lake-freeze-db.cu0bcthnum69.us-east-1.rds.amazonaws.com")
 
 
 print("getting creds from sm")
