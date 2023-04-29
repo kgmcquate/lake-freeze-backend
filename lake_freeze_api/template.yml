@@ -33,13 +33,13 @@ Resources:
           Properties:
             Path: /
             Method: ANY
-            # RestApiId: !Ref ApiGateway
+            RestApiId: !Ref ApiGateway
         Api:
           Type: Api
           Properties:
             Path: /{proxy+}
             Method: ANY
-            # RestApiId: !Ref ApiGateway
+            RestApiId: !Ref ApiGateway
 
       VpcConfig:
         SecurityGroupIds:
