@@ -1,1 +1,1 @@
-docker run --network=host -v /home/ubuntu/environment/lake-freeze-backend/lake_data_etl/:/root/ -it py bash 
+docker run --network=host -v /c/Users/Kevin/lake-freeze-backend/:/root/ -it py bash 

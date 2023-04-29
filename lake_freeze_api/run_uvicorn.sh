@@ -1,3 +1,3 @@
 
 
-uvicorn LakeFreezeApi.app:app --reload
+python LakeFreezeApi/app.py

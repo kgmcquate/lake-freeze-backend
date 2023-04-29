@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from sqlmodel import Session, select
-from sqlalchemy.dialects.postgresql import insert
 from mangum import Mangum
 import json
 import boto3
@@ -11,14 +9,10 @@ import datetime
 from data_models import Lake, WeatherByDay, LakeFreezeReport
 from external_api_calls import get_weather_data
 
-app = FastAPI()
-
-from database import engine
+app = FastAPI(debug=True)
 
 import logging
 
-from sqlmodel import SQLModel
-SQLModel.metadata.create_all(engine)
 
 
 @app.get("/home", response_class=HTMLResponse)
@@ -42,117 +36,117 @@ def get_lakes(
         max_longitude: float = 180.0,
         limit: int = 100
     ):
-            
-    with Session(engine) as session:
-        statement = select(Lake)
-        
-        if min_surface_area:
-            statement = statement.where(Lake.surface_area_m2 >= min_surface_area)
-        
-        if max_surface_area:
-            statement = statement.where(Lake.surface_area_m2 <= max_surface_area)
-        
-        statement = statement.limit(limit)
-        
-        lakes = session.exec(statement).all()
-
-    return lakes
-    
-    
-
-@app.get("/lake_freeze_reports")
-def get_lake_freeze_reports(
-        lake_id: int, 
-        date: datetime.date = datetime.datetime.today().date()
-    )-> LakeFreezeReport:
-
-    logger = logging.getLogger()
-
-    logger.setLevel(logging.INFO)
-            
-    WEATHER_LOOKBACK_DAYS = 30
-
-    min_date = date - datetime.timedelta(days=WEATHER_LOOKBACK_DAYS)
-    
-    with Session(engine) as session:
-        lake: Lake = session.get(Lake, lake_id)
-
-    logger.setLevel(logging.INFO)
-    # logger.warn(f"{lake=}")
-        
-        
-    statement = select(WeatherByDay) \
-        .where(WeatherByDay.latitude == lake.latitude) \
-        .where(WeatherByDay.longitude == lake.longitude) \
-        .where(WeatherByDay.date.between(min_date, date))  # in_ function doesn;t wqork for dates for some reason
-    
-    # print(statement.compile(engine))
-    
-    weathers: list[WeatherByDay] = session.exec(statement).all()
-
-    # logger.warn(f"{weathers=}")
-    
-    existing_weather_dates = [w.date for w in weathers]
-
-    # print(f"{existing_weather_dates=}")
-
-    weather_dates = [date - datetime.timedelta(days=x) for x in range(WEATHER_LOOKBACK_DAYS) ]
-    # logger.warn(f"{list(weather_dates)=}")
-    
-    # If not all data is present, get it from the weather api and store it in the db
-    dates_to_get = []
-    for weather_date in weather_dates:
-        if weather_date not in existing_weather_dates:
-            dates_to_get.append(weather_date)
-
-    # logger.warn(f"{list(dates_to_get)=}")
-    
-    if len(dates_to_get):
-        new_weathers = []
-        for d in dates_to_get:
-            new_weathers.append(
-                get_weather_data(
-                    latitude=lake.latitude,
-                    longitude=lake.longitude,
-                    date=d
-                )
-            )
-            
-        # with Session(engine) as session:  # Will this error out if the primary keys arent unique?
-        #     session.add_all(new_weathers)
-        
-        with engine.connect() as conn:
-            for wd in new_weathers:
-                stmt = insert(WeatherByDay).values(wd.dict())
-                stmt = stmt.on_conflict_do_nothing()  #left anti join for insert
-                result = conn.execute(stmt)
-                conn.commit()
-                
-        # Add new weathers in
-        weathers += new_weathers
 
     print("here")
-    print(weathers)
-
-    ice_thickness_m = get_ice_thickness(lake=lake, date=date, weather_reports_by_day=weathers)
+    
+    filters = []
         
-    CURRENT_ICE_ALG_VERSION = "0.0.1"
+    # if min_surface_area:
+    #     filters.append(Lake.surface_area_m2 >= min_surface_area)
+    # if max_surface_area:
+    #     filters.append(Lake.surface_area_m2 < max_surface_area)
 
-    report = LakeFreezeReport(
-        lake_id=lake.id,
-        date=date,
-        ice_alg_version=CURRENT_ICE_ALG_VERSION,
-        ice_m=ice_thickness_m,
-        is_frozen=False
-    )
+    latitude_index
 
-    with engine.connect() as conn:
-        stmt = insert(LakeFreezeReport).values(report.dict())
-        stmt = stmt.on_conflict_do_nothing()
-        result = conn.execute(stmt)
-        conn.commit()
+    lakes = [lake.as_dict() for lake in Lake.query(hash_key= , *filters)]
+    # print(lakes)
+    return [1,2,3]
+    
+    
 
-    return report
+# @app.get("/lake_freeze_reports")
+# def get_lake_freeze_reports(
+#         lake_id: int, 
+#         date: datetime.date = datetime.datetime.today().date()
+#     )-> LakeFreezeReport:
+
+#     logger = logging.getLogger()
+
+#     logger.setLevel(logging.INFO)
+            
+#     WEATHER_LOOKBACK_DAYS = 30
+
+#     min_date = date - datetime.timedelta(days=WEATHER_LOOKBACK_DAYS)
+    
+#     with Session(engine) as session:
+#         lake: Lake = session.get(Lake, lake_id)
+
+#     logger.setLevel(logging.INFO)
+#     # logger.warn(f"{lake=}")
+        
+        
+#     statement = select(WeatherByDay) \
+#         .where(WeatherByDay.latitude == lake.latitude) \
+#         .where(WeatherByDay.longitude == lake.longitude) \
+#         .where(WeatherByDay.date.between(min_date, date))  # in_ function doesn;t wqork for dates for some reason
+    
+#     # print(statement.compile(engine))
+    
+#     weathers: list[WeatherByDay] = session.exec(statement).all()
+
+#     # logger.warn(f"{weathers=}")
+    
+#     existing_weather_dates = [w.date for w in weathers]
+
+#     # print(f"{existing_weather_dates=}")
+
+#     weather_dates = [date - datetime.timedelta(days=x) for x in range(WEATHER_LOOKBACK_DAYS) ]
+#     # logger.warn(f"{list(weather_dates)=}")
+    
+#     # If not all data is present, get it from the weather api and store it in the db
+#     dates_to_get = []
+#     for weather_date in weather_dates:
+#         if weather_date not in existing_weather_dates:
+#             dates_to_get.append(weather_date)
+
+#     # logger.warn(f"{list(dates_to_get)=}")
+    
+#     if len(dates_to_get):
+#         new_weathers = []
+#         for d in dates_to_get:
+#             new_weathers.append(
+#                 get_weather_data(
+#                     latitude=lake.latitude,
+#                     longitude=lake.longitude,
+#                     date=d
+#                 )
+#             )
+            
+#         # with Session(engine) as session:  # Will this error out if the primary keys arent unique?
+#         #     session.add_all(new_weathers)
+        
+#         with engine.connect() as conn:
+#             for wd in new_weathers:
+#                 stmt = insert(WeatherByDay).values(wd.dict())
+#                 stmt = stmt.on_conflict_do_nothing()  #left anti join for insert
+#                 result = conn.execute(stmt)
+#                 conn.commit()
+                
+#         # Add new weathers in
+#         weathers += new_weathers
+
+#     print("here")
+#     print(weathers)
+
+#     ice_thickness_m = get_ice_thickness(lake=lake, date=date, weather_reports_by_day=weathers)
+        
+#     CURRENT_ICE_ALG_VERSION = "0.0.1"
+
+#     report = LakeFreezeReport(
+#         lake_id=lake.id,
+#         date=date,
+#         ice_alg_version=CURRENT_ICE_ALG_VERSION,
+#         ice_m=ice_thickness_m,
+#         is_frozen=False
+#     )
+
+#     with engine.connect() as conn:
+#         stmt = insert(LakeFreezeReport).values(report.dict())
+#         stmt = stmt.on_conflict_do_nothing()
+#         result = conn.execute(stmt)
+#         conn.commit()
+
+#     return report
 
 
 def get_ice_thickness(lake: Lake, 
