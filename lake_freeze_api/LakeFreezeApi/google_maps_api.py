@@ -13,6 +13,8 @@ from sqlmodel import Session
 
 api_key_secret_arn = os.environ.get("GOOGLEMAPS_API_KEY_SECRET" , "arn:aws:secretsmanager:us-east-1:117819748843:secret:google-maps-api-credentials-5jAl05")
 
+
+print("getting google maps secret")
 api_secret = json.loads(
         boto3.client("secretsmanager", 'us-east-1')
         .get_secret_value(SecretId=api_key_secret_arn)

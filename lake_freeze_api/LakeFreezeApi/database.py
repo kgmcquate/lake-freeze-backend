@@ -8,7 +8,7 @@ secret_uri = os.environ.get("DB_CREDS_SECRET_S3_URI", "s3://secrets-zone-1178197
 db_endpoint = os.environ.get("DB_ENDPOINT" , "lake-freeze-db.cu0bcthnum69.us-east-1.rds.amazonaws.com")
 
 
-print("getting creds from sm")
+print("getting db creds from s3")
 
 secret_bucket, secret_key = secret_uri[5:].split("/", 2)
 secret = json.loads(

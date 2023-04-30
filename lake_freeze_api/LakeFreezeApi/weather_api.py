@@ -13,6 +13,7 @@ weather_base_url = "http://api.weatherapi.com/v1/history.json"
 
 weather_api_key_secret_arn = os.environ.get("WEATHER_API_KEY_SECRET" , "arn:aws:secretsmanager:us-east-1:117819748843:secret:weather-api-credentials-Fp6sTu")
 
+print("getting weather api secret")
 weather_api_secret = json.loads(
         boto3.client("secretsmanager", 'us-east-1')
         .get_secret_value(SecretId=weather_api_key_secret_arn)
