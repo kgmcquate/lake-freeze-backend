@@ -142,7 +142,7 @@ def get_lake_freeze_reports(
         if weather_date not in existing_weather_dates:
             dates_to_get.append(weather_date)
 
-    # logger.warn(f"{list(dates_to_get)=}")
+    logger.warn(f"{list(dates_to_get)=}")
     
     if len(dates_to_get):
         new_weathers = []

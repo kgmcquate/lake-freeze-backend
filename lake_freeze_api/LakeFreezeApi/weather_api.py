@@ -33,7 +33,7 @@ def get_weather_data(latitude: float, longitude: float, date: datetime.date) -> 
             
     query = f"{latitude},{longitude}"
             
-
+    print(f"Getting weather for {date} {query}")
     resp = requests.get(
             weather_base_url, 
             params={"key": weather_api_key, 
