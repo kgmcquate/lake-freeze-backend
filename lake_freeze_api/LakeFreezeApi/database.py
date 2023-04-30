@@ -3,16 +3,19 @@ import json
 import os
 import boto3
 
-secret_arn = os.environ.get("DB_CREDS_SECRET_ARN", "arn:aws:secretsmanager:us-east-1:117819748843:secret:rds-lake-freeze-credentials-5gwihC")
+secret_uri = os.environ.get("DB_CREDS_SECRET_S3_URI", "s3://secrets-zone-117819748843/lake_freeze_credentials.json")
 
 db_endpoint = os.environ.get("DB_ENDPOINT" , "lake-freeze-db.cu0bcthnum69.us-east-1.rds.amazonaws.com")
 
 
 print("getting creds from sm")
+
+secret_bucket, secret_key = secret_uri[5:].split("/", 2)
 secret = json.loads(
-        boto3.client("secretsmanager", 'us-east-1')
-        .get_secret_value(SecretId=secret_arn)
-        ["SecretString"]
+        boto3.client("s3")
+        .get_object(Bucket=secret_bucket, Key=secret_key)
+        ["Body"]
+        .read().decode("utf-8")
 )
 
 db_username = secret["username"]

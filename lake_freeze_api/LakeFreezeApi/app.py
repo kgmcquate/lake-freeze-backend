@@ -12,6 +12,7 @@ import datetime
 from data_models import Lake, WeatherByDay, LakeFreezeReport
 from weather_api import get_weather_data
 from google_maps_api import update_latitude_and_longitude
+from ice_growth_models import ashton_ice_growth
 
 app = FastAPI()
 
@@ -106,7 +107,7 @@ def get_lake_freeze_reports(
 
     logger.setLevel(logging.INFO)
             
-    WEATHER_LOOKBACK_DAYS = 30
+    WEATHER_LOOKBACK_DAYS = 90
 
     min_date = date - datetime.timedelta(days=WEATHER_LOOKBACK_DAYS)
     
@@ -158,10 +159,12 @@ def get_lake_freeze_reports(
                 
         # Add new weathers in
         weathers += new_weathers
-
-    ice_thickness_m = get_ice_thickness(lake=lake, date=date, weather_reports_by_day=weathers)
         
     CURRENT_ICE_ALG_VERSION = "0.0.1"
+
+    ice_thickness_m = ashton_ice_growth(weathers)
+
+    print(ice_thickness_m)
 
     report = LakeFreezeReport(
         lake_id=lake.id,
@@ -171,16 +174,11 @@ def get_lake_freeze_reports(
         is_frozen=False
     )
 
-    background_tasks.add_task(insert_lake_freeze_report, report)    
+    # background_tasks.add_task(insert_lake_freeze_report, report)    
 
     return report
 
 
-def get_ice_thickness(lake: Lake, 
-                      date: datetime.date,
-                      weather_reports_by_day: list[WeatherByDay]
-                      ) -> int:
-    return 0.1
 
 
 
