@@ -107,7 +107,7 @@ def get_lake_freeze_reports(
 
     logger.setLevel(logging.INFO)
             
-    WEATHER_LOOKBACK_DAYS = 90
+    WEATHER_LOOKBACK_DAYS = 15
 
     min_date = date - datetime.timedelta(days=WEATHER_LOOKBACK_DAYS)
     
