@@ -14,6 +14,13 @@ Parameters:
     Type: String
     Default: Z028090523Q7W6VMX59IC
 
+Globals:
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,OPTIONS'"
+      AllowHeaders: "'content-type'"
+      AllowOrigin: "'*'"
+
 Resources:
   LakeFreezeApi:
     Type: AWS::Serverless::Function

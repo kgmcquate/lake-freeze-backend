@@ -1,5 +1,7 @@
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+
 from sqlmodel import Session, select
 from sqlalchemy.sql.operators import is_
 from sqlalchemy.dialects.postgresql import insert
@@ -15,6 +17,24 @@ from google_maps_api import update_latitude_and_longitude
 from ice_growth_models import ashton_ice_growth
 
 app = FastAPI()
+
+
+origins = [
+    "*"
+    "http://localhost.tiangolo.com",
+    "https://localhost.tiangolo.com",
+    "http://localhost",
+    "http://localhost:8080",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 from database import engine
 
