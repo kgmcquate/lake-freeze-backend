@@ -67,6 +67,8 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: prod
+      #DisableExecuteApiEndpoint: true
+      Cors:
       Domain:
         DomainName: !Ref DomainName
         CertificateArn: !Ref DomainTLSCertificateARN

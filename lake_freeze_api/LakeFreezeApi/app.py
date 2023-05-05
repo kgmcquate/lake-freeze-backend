@@ -1,4 +1,4 @@
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks, Response
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -21,10 +21,10 @@ app = FastAPI()
 
 origins = [
     "*"
-    "http://localhost.tiangolo.com",
-    "https://localhost.tiangolo.com",
-    "http://localhost",
-    "http://localhost:8080",
+    # "http://localhost.tiangolo.com",
+    # "https://localhost.tiangolo.com",
+    # "http://localhost",
+    # "http://localhost:8080",
 ]
 
 app.add_middleware(
@@ -35,6 +35,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+cors_headers = {
+            "Access-Control-Allow-Headers" : "Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with",
+            "Access-Control-Allow-Origin": "*", # Allow from anywhere 
+            "Access-Control-Allow-Methods": "*" # Allow only GET request 
+        }
 
 from database import engine
 
@@ -57,6 +62,7 @@ def get_home_page():
 
 @app.get("/lakes")
 def get_lakes(
+        response: Response,
         id: Optional[int] = None,
         min_surface_area: Optional[float] = None,
         max_surface_area: Optional[float] = None,
@@ -64,7 +70,7 @@ def get_lakes(
         max_latitude: float = 90.0,
         min_longitude: float = -180.0,
         max_longitude: float = 180.0,
-        limit: int = 100
+        limit: int = 100        
     ):
             
     with Session(engine) as session:
@@ -83,6 +89,7 @@ def get_lakes(
         
         lakes = session.exec(statement).all()
 
+    response.headers.update(cors_headers)
 
     return lakes
     
