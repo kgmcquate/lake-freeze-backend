@@ -72,7 +72,8 @@ Resources:
       Domain:
         DomainName: !Ref DomainName
         CertificateArn: !Ref DomainTLSCertificateARN
-        EndpointConfiguration: REGIONAL
+        EndpointConfiguration: 
+          Type: REGIONAL
         Route53:
           HostedZoneId: !Ref DomainHostedZoneId
 
