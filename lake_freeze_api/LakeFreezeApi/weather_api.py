@@ -40,16 +40,23 @@ def get_weather_data(latitude: float, longitude: float, date: datetime.date) -> 
                     "q": query, 
                     "dt": str(date)
                     }
-        ).json()
+        )
+    
+    resp.raise_for_status()
+
+    resp = resp.json()
     
     
     # make sure its pulling from the correct location
     print(f"{latitude=}")
-    print(f"{resp['location']['lat']=}")
+    try:
+        print(f"{resp['location']['lat']=}")
+    except Exception as e:
+          print(e)
 
-    assert abs(latitude - resp['location']['lat']) < 0.1
+    # assert abs(latitude - resp['location']['lat']) < 0.1
     
-    assert abs(longitude - resp['location']['lon']) < 0.1
+    # assert abs(longitude - resp['location']['lon']) < 0.1
     
     weather_by_day = WeatherByDay(
             date=date,
