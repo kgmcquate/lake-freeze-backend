@@ -50,6 +50,7 @@ class LakeFreezeReport(SQLModel, table=True):
     is_frozen: bool
     latitude: float
     longitude: float
+    lake_name: str
     last_updated_ts: Optional[datetime.datetime] = Field(default=datetime.datetime.now(datetime.timezone.utc))
     
     

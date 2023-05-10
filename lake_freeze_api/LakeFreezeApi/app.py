@@ -252,7 +252,8 @@ def get_lake_weather_reports(
             ice_m=ice_thickness_m,
             is_frozen=ice_thickness_m > 0,
             latitude=lake.latitude,
-            longitude=lake.longitude
+            longitude=lake.longitude,
+            lake_name=lake.lake_name
         )
 
         reports.append(report)
