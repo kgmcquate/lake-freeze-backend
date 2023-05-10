@@ -1,4 +1,5 @@
 from typing import Annotated
+import functools
 
 from fastapi import FastAPI, BackgroundTasks, Response, Query
 from fastapi.responses import HTMLResponse
@@ -125,8 +126,8 @@ def insert_lake_freeze_report(report: LakeFreezeReport):
     conn.commit()
 
 
-@app.get("/lake_freeze_reports/")
-def get_lake_freeze_reports(
+@app.get("/lake_weather_reports/")
+def get_lake_weather_reports(
         lake_id: Annotated[list[int], Query()],
         date: datetime.date = datetime.datetime.today().date(),
         background_tasks: BackgroundTasks = None # Used for writing to DB after the response is returned
@@ -157,15 +158,9 @@ def get_lake_freeze_reports(
     # TODO this probably should just be a sql join
         
     stmt = select(WeatherByDay)
-
-    def or_filters(filter_exprs: list):
-        import functools
-        return functools.reduce(or_, filter_exprs)
-
-
     
     stmt = stmt.where(
-        or_filters(
+        functools.reduce(or_,
             [
                 and_(WeatherByDay.latitude == lake.latitude, WeatherByDay.longitude == lake.longitude ) 
                 for lake in lakes
