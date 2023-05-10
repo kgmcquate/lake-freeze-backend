@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from sqlmodel import Session, select
-from sqlalchemy.sql.operators import is_
+from sqlalchemy.sql.operators import is_, or_, and_
 from sqlalchemy.dialects.postgresql import insert
 from mangum import Mangum
 import json
@@ -123,9 +123,9 @@ def insert_lake_freeze_report(report: LakeFreezeReport):
     conn.commit()
 
 
-@app.get("/lake_freeze_reports/{lake_id}")
+@app.get("/lake_freeze_reports/{lake_ids}")
 def get_lake_freeze_reports(
-        lake_id: int, 
+        lake_ids: list[int], 
         date: datetime.date = datetime.datetime.today().date(),
         background_tasks: BackgroundTasks = None # Used for writing to DB after the response is returned
     )-> LakeFreezeReport:
@@ -138,17 +138,36 @@ def get_lake_freeze_reports(
 
     min_date = date - datetime.timedelta(days=WEATHER_LOOKBACK_DAYS)
     
+
+    lakes: list[Lake] = []
     with Session(engine) as session:
-        lake: Lake = session.get(Lake, lake_id)
+        for lake_id in lake_ids:
+            lakes.append(
+                session.get(Lake, lake_id)
+            )
 
     logger.setLevel(logging.INFO)
     # logger.warn(f"{lake=}")
+
+    # TODO this probably should just be a sql join
         
-        
-    statement = select(WeatherByDay) \
-        .where(WeatherByDay.latitude == lake.latitude) \
-        .where(WeatherByDay.longitude == lake.longitude) \
-        .where(WeatherByDay.date.between(min_date, date))  # in_ function doesn;t wqork for dates for some reason
+    stmt = select(WeatherByDay)
+    
+    stmt = stmt.where(
+        or_(
+            *[
+                and_(WeatherByDay.latitude == lake.latitude, WeatherByDay.longitude == lake.longitude ) 
+                for lake in lakes
+            ]
+        )
+    )
+
+    stmt = stmt.where(WeatherByDay.date.between(min_date, date))
+
+    # statement = select(WeatherByDay) \
+    #     .where(WeatherByDay.latitude == lake.latitude) \
+    #     .where(WeatherByDay.longitude == lake.longitude) \
+    #     .where(WeatherByDay.date.between(min_date, date))  # in_ function doesn;t wqork for dates for some reason
     
     # print(statement.compile(engine))
     
