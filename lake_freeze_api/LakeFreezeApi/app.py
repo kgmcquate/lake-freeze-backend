@@ -1,9 +1,12 @@
-from fastapi import FastAPI, BackgroundTasks, Response
+from typing import Annotated
+import functools
+
+from fastapi import FastAPI, BackgroundTasks, Response, Query
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from sqlmodel import Session, select
-from sqlalchemy.sql.operators import is_
+from sqlalchemy.sql.operators import is_, or_, and_
 from sqlalchemy.dialects.postgresql import insert
 from mangum import Mangum
 import json
@@ -123,40 +126,62 @@ def insert_lake_freeze_report(report: LakeFreezeReport):
     conn.commit()
 
 
-@app.get("/lake_freeze_reports/{lake_id}")
-def get_lake_freeze_reports(
-        lake_id: int, 
+@app.get("/lake_weather_reports/")
+def get_lake_weather_reports(
+        lake_id: Annotated[list[int], Query()],
         date: datetime.date = datetime.datetime.today().date(),
         background_tasks: BackgroundTasks = None # Used for writing to DB after the response is returned
-    )-> LakeFreezeReport:
+    )-> list[LakeFreezeReport]:
+
+
+    lake_ids = lake_id  # Renaming for clarity
 
     logger = logging.getLogger()
 
     logger.setLevel(logging.INFO)
             
-    WEATHER_LOOKBACK_DAYS = 15
+    WEATHER_LOOKBACK_DAYS = 7
 
     min_date = date - datetime.timedelta(days=WEATHER_LOOKBACK_DAYS)
     
+
+    lakes: list[Lake] = []
     with Session(engine) as session:
-        lake: Lake = session.get(Lake, lake_id)
+        for lake_id in lake_ids:
+            lakes.append(
+                session.get(Lake, lake_id)
+            )
 
     logger.setLevel(logging.INFO)
     # logger.warn(f"{lake=}")
+
+    # TODO this probably should just be a sql join
         
-        
-    statement = select(WeatherByDay) \
-        .where(WeatherByDay.latitude == lake.latitude) \
-        .where(WeatherByDay.longitude == lake.longitude) \
-        .where(WeatherByDay.date.between(min_date, date))  # in_ function doesn;t wqork for dates for some reason
+    stmt = select(WeatherByDay)
+    
+    stmt = stmt.where(
+        functools.reduce(or_,
+            [
+                and_(WeatherByDay.latitude == lake.latitude, WeatherByDay.longitude == lake.longitude ) 
+                for lake in lakes
+            ]
+        )
+    )
+
+    stmt = stmt.where(WeatherByDay.date.between(min_date, date))
+
+    # statement = select(WeatherByDay) \
+    #     .where(WeatherByDay.latitude == lake.latitude) \
+    #     .where(WeatherByDay.longitude == lake.longitude) \
+    #     .where(WeatherByDay.date.between(min_date, date))  # in_ function doesn;t wqork for dates for some reason
     
     # print(statement.compile(engine))
     
-    weathers: list[WeatherByDay] = session.exec(statement).all()
+    existing_weathers: list[WeatherByDay] = session.exec(stmt).all()
 
     # logger.warn(f"{weathers=}")
     
-    existing_weather_dates = [w.date for w in weathers]
+    # existing_weather_dates = [w.date for w in weathers]
 
     # print(f"{existing_weather_dates=}")
 
@@ -164,46 +189,80 @@ def get_lake_freeze_reports(
     # logger.warn(f"{list(weather_dates)=}")
     
     # If not all data is present, get it from the weather api and store it in the db
-    dates_to_get = []
-    for weather_date in weather_dates:
-        if weather_date not in existing_weather_dates:
-            dates_to_get.append(weather_date)
-
-    logger.warn(f"{list(dates_to_get)=}")
+    weathers_to_get = []
     
-    if len(dates_to_get):
-        new_weathers = []
-        for d in dates_to_get:
-            new_weathers.append(
-                get_weather_data(
-                    latitude=lake.latitude,
-                    longitude=lake.longitude,
-                    date=d
-                )
+    for lake in lakes:
+        for weather_date in weather_dates:
+            has_existing_weather = False
+            for weather in existing_weathers:
+                if (weather.date == weather_date 
+                    and lake.latitude == weather.latitude 
+                    and lake.longitude == weather.longitude
+                ):
+                    has_existing_weather = True
+            if not has_existing_weather:
+                weathers_to_get.append({
+                        "latitude": lake.latitude,
+                        "longitude": lake.longitude,
+                        "date": weather_date
+                    })
+
+
+            # if weather_date not in existing_weather_dates:
+            #     dates_to_get.append(weather_date)
+
+    logger.warn(f"{list(weathers_to_get)=}")
+    
+
+    new_weathers = []
+    for weather in weathers_to_get:
+        new_weathers.append(
+            get_weather_data(
+                **weather
             )
-        
-        background_tasks.add_task(insert_weathers, new_weathers)
-                
-        # Add new weathers in
-        weathers += new_weathers
+        )
+    
+    background_tasks.add_task(insert_weathers, new_weathers)
+            
+    # Add new weathers in
+    weathers = existing_weathers + new_weathers
+
         
     CURRENT_ICE_ALG_VERSION = "0.0.1"
 
-    ice_thickness_m = ashton_ice_growth(weathers)
+    print(lakes)
 
-    print(ice_thickness_m)
+    reports = []
+    for lake in lakes:
+        weathers_for_lake = []
+        for weather in weathers:
+            if lake.latitude == weather.latitude and lake.longitude == weather.longitude:
+                if weather.date not in [w.date for w in weathers_for_lake]:
+                    weathers_for_lake.append(weather)
 
-    report = LakeFreezeReport(
-        lake_id=lake.id,
-        date=date,
-        ice_alg_version=CURRENT_ICE_ALG_VERSION,
-        ice_m=ice_thickness_m,
-        is_frozen=False
-    )
+        ice_thickness_m = ashton_ice_growth(weathers_for_lake)
+
+        
+        print(ice_thickness_m)
+
+        report = LakeFreezeReport(
+            lake_id=lake.id,
+            date=date,
+            ice_alg_version=CURRENT_ICE_ALG_VERSION,
+            ice_m=ice_thickness_m,
+            is_frozen=ice_thickness_m > 0,
+            latitude=lake.latitude,
+            longitude=lake.longitude,
+            lake_name=lake.lake_name
+        )
+
+        reports.append(report)
+
+    print(reports)
 
     # background_tasks.add_task(insert_lake_freeze_report, report)    
 
-    return report
+    return reports
 
 
 
