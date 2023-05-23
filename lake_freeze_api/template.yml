@@ -4,7 +4,7 @@ Transform: AWS::Serverless-2016-10-31
 Parameters:
   DomainName:
     Type: String
-    Default: kevin-mcquate.net
+    Default: lake-freeze-api.kevin-mcquate.net
 
   DomainTLSCertificateARN:
     Type: String
