@@ -14,7 +14,6 @@ def ashton_ice_growth(
         )
 
     def get_fdd(weather_day: WeatherByDay):
-            print(f"{weather_day.avg_temp_c=}")
             return weather_day.avg_temp_c * GROWTH_RATE
 
     # the average number of degrees below freezing over 24 hours

@@ -24,12 +24,6 @@ weather_api_key = weather_api_secret["key"]
 
 
 def get_weather_data(latitude: float, longitude: float, date: datetime.date) -> WeatherByDay:
-    def coalesce(val1, val2):
-        if val1 is not None:
-                return val1
-        else:
-                return val2 
-
             
     query = f"{latitude},{longitude}"
             
@@ -48,7 +42,7 @@ def get_weather_data(latitude: float, longitude: float, date: datetime.date) -> 
     
     
     # make sure its pulling from the correct location
-    print(f"{latitude=}")
+#     print(f"{latitude=}")
     try:
         print(f"{resp['location']['lat']=}")
     except Exception as e:

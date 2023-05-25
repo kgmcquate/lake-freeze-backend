@@ -6,6 +6,10 @@ from data_models import Lake
 from database import engine
 from sqlmodel import Session
 
+import sys
+
+sys.setrecursionlimit(10000)
+
 # Geocoding an address
 # geocode_result = gmaps.geocode('1600 Amphitheatre Parkway, Mountain View, CA')
 

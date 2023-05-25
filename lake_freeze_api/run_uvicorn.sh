@@ -1,3 +1,3 @@
 
 
-python LakeFreezeApi/app.py
+python3 LakeFreezeApi/app.py

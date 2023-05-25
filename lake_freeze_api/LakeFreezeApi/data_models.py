@@ -41,7 +41,7 @@ class WeatherByDay(SQLModel, table=True):
     last_updated_ts: Optional[datetime.datetime] = Field(default=datetime.datetime.now(datetime.timezone.utc))
     
     
-class LakeFreezeReport(SQLModel, table=True):
+class LakeWeatherReport(SQLModel, table=True):
     __tablename__ = "lake_freeze_reports"
     lake_id: int = Field(primary_key=True)
     date: datetime.date = Field(primary_key=True)
