@@ -27,7 +27,7 @@ def get_weather_data(latitude: float, longitude: float, date: datetime.date) -> 
             
     query = f"{latitude},{longitude}"
             
-    print(f"Getting weather for {date} {query}")
+#     print(f"Getting weather for {date} {query}")
     resp = requests.get(
             weather_base_url, 
             params={"key": weather_api_key, 
@@ -43,10 +43,10 @@ def get_weather_data(latitude: float, longitude: float, date: datetime.date) -> 
     
     # make sure its pulling from the correct location
 #     print(f"{latitude=}")
-    try:
-        print(f"{resp['location']['lat']=}")
-    except Exception as e:
-          print(e)
+#     try:
+#         print(f"{resp['location']['lat']=}")
+#     except Exception as e:
+#           print(e)
 
     # assert abs(latitude - resp['location']['lat']) < 0.1
     

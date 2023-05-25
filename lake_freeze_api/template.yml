@@ -30,8 +30,8 @@ Resources:
       CodeUri: LakeFreezeApi/
       Handler: app.handler
 
-      Timeout: 300
-      MemorySize: 128
+      Timeout: 360
+      MemorySize: 512
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/lake-freeze-lambda-role
 
       Events:
