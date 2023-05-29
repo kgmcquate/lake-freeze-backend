@@ -91,6 +91,7 @@ def query_lakes(
         min_longitude: float = -180.0,
         max_longitude: float = 180.0,
         limit: int = 100,
+        order_by_size: bool = True,
         **kwargs
     ):
 
@@ -132,7 +133,10 @@ def query_lakes(
                 .where(Lake.longitude >= min_longitude)
                 .where(Lake.longitude <= max_longitude)
         )
-        
+    
+        if order_by_size:
+            statement = statement.order_by(Lake.surface_area_m2.desc())
+
         statement = statement.limit(limit)
         
         lakes = session.exec(statement).all()
@@ -140,7 +144,7 @@ def query_lakes(
     return lakes
     
 
-
+# TODO add lake size sorting for limit
 @app.get("/lake_weather_reports/")
 def get_lake_weather_reports(
         date: datetime.date = datetime.datetime.today().date(),
@@ -187,9 +191,6 @@ def get_lake_weather_reports(
     # TODO this probably should just be a sql join
     
     with Session(engine) as session:
-
-        
-
         stmt = select(WeatherByDay)
         
         if len(lakes):
