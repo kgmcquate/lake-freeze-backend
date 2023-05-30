@@ -74,7 +74,7 @@ def get_lakes(
         min_longitude: float = -180.0,
         max_longitude: float = 180.0,
         limit: int = 100        
-    ):
+    ) -> list[Lake]:
 
     lakes = query_lakes(**locals())
 
