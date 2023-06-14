@@ -8,13 +8,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
 from sqlalchemy.sql.operators import is_, or_, and_
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import cast, Numeric, Float
+import sqlalchemy
 from mangum import Mangum
 import json
 import boto3
 from typing import Optional
 import datetime
 
-from data_models import Lake, WeatherByDay, LakeWeatherReport
+from data_models import Lake, DailyWeather, LakeWeatherReport
 from weather_api import get_weather_data
 from google_maps_api import update_latitude_and_longitude
 from ice_growth_models import ashton_ice_growth
@@ -76,6 +78,7 @@ def get_lakes(
         limit: int = 100        
     ) -> list[Lake]:
 
+    lake_ids = [id] if id is not None else None
     lakes = query_lakes(**locals())
 
     response.headers.update(cors_headers) #TODO is this necessary?
@@ -93,7 +96,7 @@ def query_lakes(
         limit: int = 100,
         order_by_size: bool = True,
         **kwargs
-    ):
+    ) -> list[Lake]:
 
     # id_filter = "true" if lake_ids is None else f"id IN ({','.join(lake_ids)})"
 
@@ -125,13 +128,14 @@ def query_lakes(
         
         if max_surface_area:
             statement = statement.where(Lake.surface_area_m2 <= max_surface_area)
+
         
         statement = (
             statement
-                .where(Lake.latitude >= min_latitude)
-                .where(Lake.latitude <= max_latitude)
-                .where(Lake.longitude >= min_longitude)
-                .where(Lake.longitude <= max_longitude)
+                .where(cast(Lake.latitude , Float)>= min_latitude)
+                .where(cast(Lake.latitude , Float)<= max_latitude)
+                .where(cast(Lake.longitude, Float) >= min_longitude)
+                .where(cast(Lake.longitude, Float) <= max_longitude)
         )
     
         if order_by_size:
@@ -142,7 +146,7 @@ def query_lakes(
         lakes = session.exec(statement).all()
 
     return lakes
-    
+    # lake_weather_reports/
 
 # TODO add lake size sorting for limit
 @app.get("/lake_weather_reports/")
@@ -172,14 +176,14 @@ def get_lake_weather_reports(
 
     logger.setLevel(logging.INFO)
             
-    WEATHER_LOOKBACK_DAYS = 7
+    WEATHER_LOOKBACK_DAYS = 7 #365
 
     min_date = date - datetime.timedelta(days=WEATHER_LOOKBACK_DAYS)
     
     # latlong_filter = ' OR '.join([f"(latitude = {lake.latitude} AND longitude = {lake.longitude} )" for lake in lakes])
 
     # engine.execute(f"""
-    # SELECT * FROM {WeatherByDay.__tablename__}
+    # SELECT * FROM {DailyWeather.__tablename__}
     # WHERE
     # (
     #     {latlong_filter}
@@ -191,23 +195,23 @@ def get_lake_weather_reports(
     # TODO this probably should just be a sql join
     
     with Session(engine) as session:
-        stmt = select(WeatherByDay)
+        stmt = select(DailyWeather)
         
         if len(lakes):
             stmt = stmt.where(
                 functools.reduce(or_,
                     [
-                        and_(WeatherByDay.latitude == lake.latitude, WeatherByDay.longitude == lake.longitude ) 
+                        and_(DailyWeather.latitude == lake.latitude, DailyWeather.longitude == lake.longitude ) 
                         for lake in lakes
                     ]
                 )
             )
 
-        stmt = stmt.where(WeatherByDay.date.between(min_date, date))
+        stmt = stmt.where(DailyWeather.date.between(min_date, date))
 
-        existing_weathers: list[WeatherByDay] = session.exec(stmt).all()
+        existing_weathers: list[DailyWeather] = session.exec(stmt).all()
 
-    # logger.warn(f"{weathers=}")
+    logger.warn(f"{existing_weathers=}")
     
     # existing_weather_dates = [w.date for w in weathers]
 
@@ -239,30 +243,30 @@ def get_lake_weather_reports(
             # if weather_date not in existing_weather_dates:
             #     dates_to_get.append(weather_date)
 
-    # logger.warn(f"{list(weathers_to_get)=}")
+    logger.warn(f"{list(weathers_to_get)=}")
     
     from concurrent.futures import ThreadPoolExecutor
 
-    new_weathers = []
-    with ThreadPoolExecutor(max_workers=500) as executor:
-        futures = []
-        for weather in weathers_to_get:
-            futures.append(
-                executor.submit(get_weather_data, **weather)
-            )
+    # new_weathers = []
+    # with ThreadPoolExecutor(max_workers=500) as executor:
+    #     futures = []
+    #     for weather in weathers_to_get:
+    #         futures.append(
+    #             executor.submit(get_weather_data, **weather)
+    #         )
 
-        for future in futures:
-            try:
-                new_weathers.append(
-                    future.result()
-                )
-            except Exception as e:
-                print(e)
+    #     for future in futures:
+    #         try:
+    #             new_weathers.append(
+    #                 future.result()
+    #             )
+    #         except Exception as e:
+    #             print(e)
     
-    background_tasks.add_task(insert_weathers, new_weathers)
+    # background_tasks.add_task(insert_weathers, new_weathers)
             
     # Add new weathers in
-    weathers = existing_weathers + new_weathers
+    weathers = existing_weathers #+ new_weathers
 
         
     CURRENT_ICE_ALG_VERSION = "0.0.1"
@@ -315,10 +319,10 @@ def update_lat_long(
     return f"updated {len(lakes)}"
     
 
-def insert_weathers(weathers: list[WeatherByDay]):
+def insert_weathers(weathers: list[DailyWeather]):
     with engine.connect() as conn:
         for wd in weathers:
-            stmt = insert(WeatherByDay).values(wd.dict())
+            stmt = insert(DailyWeather).values(wd.dict())
             stmt = stmt.on_conflict_do_nothing()  #left anti join for insert
             result = conn.execute(stmt)
         conn.commit()

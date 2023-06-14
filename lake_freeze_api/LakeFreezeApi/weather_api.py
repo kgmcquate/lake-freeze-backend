@@ -1,6 +1,6 @@
 import datetime
 import requests
-from data_models import Lake, WeatherByDay
+from data_models import Lake, DailyWeather
 import boto3
 import json
 import os
@@ -23,7 +23,7 @@ weather_api_secret = json.loads(
 weather_api_key = weather_api_secret["key"]
 
 
-def get_weather_data(latitude: float, longitude: float, date: datetime.date) -> WeatherByDay:
+def get_weather_data(latitude: float, longitude: float, date: datetime.date) -> DailyWeather:
             
     query = f"{latitude},{longitude}"
             
@@ -52,7 +52,7 @@ def get_weather_data(latitude: float, longitude: float, date: datetime.date) -> 
     
     # assert abs(longitude - resp['location']['lon']) < 0.1
     
-    weather_by_day = WeatherByDay(
+    weather_by_day = DailyWeather(
             date=date,
             nearby_city_name=resp['location'].get('name').lower(),
             state_or_province=resp['location'].get('region').lower(),

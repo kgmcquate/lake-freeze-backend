@@ -8,12 +8,10 @@ from sqlmodel import Session
 
 import sys
 
-sys.setrecursionlimit(10000)
+sys.setrecursionlimit(10000)  # The or_ function from sqlalchemy is recursive, so the recursion level can be reached with a lot of lake_ids
 
 # Geocoding an address
 # geocode_result = gmaps.geocode('1600 Amphitheatre Parkway, Mountain View, CA')
-
-
 
 api_key_secret_arn = os.environ.get("GOOGLEMAPS_API_KEY_SECRET" , "arn:aws:secretsmanager:us-east-1:117819748843:secret:google-maps-api-credentials-5jAl05")
 

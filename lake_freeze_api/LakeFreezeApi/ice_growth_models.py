@@ -1,8 +1,8 @@
-from data_models import WeatherByDay
+from data_models import DailyWeather
 from dataclasses import dataclass
 
 def ashton_ice_growth(
-            weather_days: list[WeatherByDay]            
+            weather_days: list[DailyWeather]            
         ):
     """http://lakeice.squarespace.com/ice-growth/"""
 
@@ -13,8 +13,8 @@ def ashton_ice_growth(
             * 9 / 5 # degrees f per degree C
         )
 
-    def get_fdd(weather_day: WeatherByDay):
-            return weather_day.avg_temp_c * GROWTH_RATE
+    def get_fdd(weather_day: DailyWeather):
+            return (weather_day.temperature_2m_min + weather_day.temperature_2m_max) / 2 * GROWTH_RATE
 
     # the average number of degrees below freezing over 24 hours
     initial_ice_thickness = 0
