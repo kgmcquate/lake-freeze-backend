@@ -31,8 +31,8 @@ class DailyWeather(SQLModel, table=True):
     timezone: str
     temperature_2m_max: float = Field(default=None)
     temperature_2m_min: float = Field(default=None)
-    sunrise: datetime.date = Field(default=None)
-    sunset: datetime.date = Field(default=None)
+    sunrise: datetime.datetime = Field(default=None)
+    sunset: datetime.datetime = Field(default=None)
     uv_index_max: float = Field(default=None)
     uv_index_clear_sky_max: float = Field(default=None)
     precipitation_sum: float = Field(default=None)
