@@ -306,17 +306,17 @@ def get_lake_weather_reports(
     return reports
 
 
-@app.get("/lakes/update_lat_long")
-def update_lat_long(
-        limit: int = 1
-    ):
-    with Session(engine) as session:
-        statement = select(Lake).where(Lake.longitude.is_(None) | Lake.latitude.is_(None)).limit(limit)
-        lakes = session.exec(statement).all()
+# @app.get("/lakes/update_lat_long")
+# def update_lat_long(
+#         limit: int = 1
+#     ):
+#     with Session(engine) as session:
+#         statement = select(Lake).where(Lake.longitude.is_(None) | Lake.latitude.is_(None)).limit(limit)
+#         lakes = session.exec(statement).all()
 
-    update_latitude_and_longitude(lakes)
+#     update_latitude_and_longitude(lakes)
 
-    return f"updated {len(lakes)}"
+#     return f"updated {len(lakes)}"
     
 
 def insert_weathers(weathers: list[DailyWeather]):
