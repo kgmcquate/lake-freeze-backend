@@ -2,24 +2,34 @@ from sqlmodel import SQLModel, Field
 from typing import Optional
 import datetime
 
-from sqlmodel import Session, select
+from sqlalchemy import Column
+from sqlalchemy.dialects.postgresql import JSONB
 
-
-class Lake(SQLModel, table=True):
-    __tablename__ = "lakes"
+class WaterBody(SQLModel, table=True):
+    __tablename__ = "water_bodies"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    lake_name: str
-    latitude: str = None
     longitude: str = None
-    nearby_city_name: str = None
-    state_or_province: str = None
-    country: str = None
-    nearby_city_latitude: str = None
-    nearby_city_longitude: str = None
+    latitude: str = None
+    name: str = None
     max_depth_m: float = None
-    surface_area_m2: float = None
+    areasqkm: float = None
+    elevation: Optional[float] = Field(default=None)
+    min_latitude: float = None
+    max_latitude: float = None
+    min_longitude: float = None
+    max_longitude: float = None
 
+class WaterBodyGeometry(SQLModel, table=True):
+    __tablename__ = "water_body_geometries"
+    class Config:
+        arbitrary_types_allowed = True
+        response_model=None
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    boundary: JSONB = Field(default=None, sa_column=Column(JSONB))
+    bounding_box: JSONB = Field(default=None, sa_column=Column(JSONB))
+    geometry: JSONB = Field(default=None, sa_column=Column(JSONB))
 
 
 class DailyWeather(SQLModel, table=True):
@@ -48,36 +58,17 @@ class DailyWeather(SQLModel, table=True):
     et0_fao_evapotranspiration: float = Field(default=None)
 
 
-# class WeatherByDay(SQLModel, table=True):
-#     __tablename__ = "weather_by_day"
     
-#     date: datetime.date = Field(primary_key=True)
-#     latitude: float = Field(primary_key=True)
-#     longitude: float = Field(primary_key=True)
-#     nearby_city_name: str
-#     state_or_province: str 
-#     country: str
-#     max_temp_c: float
-#     min_temp_c: float
-#     avg_temp_c: float
-#     max_wind_kph: float
-#     total_precip_mm: float
-#     avg_visibility_km: float
-#     avg_humidity: float
-#     uv: float
-#     last_updated_ts: Optional[datetime.datetime] = Field(default=datetime.datetime.now(datetime.timezone.utc))
-    
-    
-class LakeWeatherReport(SQLModel, table=True):
-    __tablename__ = "lake_freeze_reports"
-    lake_id: int = Field(primary_key=True)
+class WaterBodyWeatherReport(SQLModel, table=True):
+    __tablename__ = "waterbody_weather_reports"
+    water_body_id: int = Field(primary_key=True)
     date: datetime.date = Field(primary_key=True)
     ice_alg_version: str
     ice_m: float
     is_frozen: bool
     latitude: str
     longitude: str
-    lake_name: str
+    water_body_name: str
     last_updated_ts: Optional[datetime.datetime] = Field(default=datetime.datetime.now(datetime.timezone.utc))
     
     

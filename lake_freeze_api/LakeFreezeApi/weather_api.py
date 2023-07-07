@@ -1,15 +1,11 @@
 import datetime
 import requests
-from data_models import Lake, DailyWeather
+from data_models import DailyWeather
 import boto3
 import json
 import os
 
 weather_base_url = "http://api.weatherapi.com/v1/history.json"
-
-
-# api_key = "f05c945b0eb94da580d222013232104"
-
 
 weather_api_key_secret_arn = os.environ.get("WEATHER_API_KEY_SECRET" , "arn:aws:secretsmanager:us-east-1:117819748843:secret:weather-api-credentials-Fp6sTu")
 

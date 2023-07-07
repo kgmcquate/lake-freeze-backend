@@ -13,13 +13,17 @@ import sqlalchemy
 from mangum import Mangum
 import json
 import boto3
-from typing import Optional
+from typing import Optional, Any
 import datetime
 
-from data_models import Lake, DailyWeather, LakeWeatherReport
+from data_models import DailyWeather, WaterBody, WaterBodyGeometry, WaterBodyWeatherReport
 from weather_api import get_weather_data
-from google_maps_api import update_latitude_and_longitude
 from ice_growth_models import ashton_ice_growth
+
+import sys
+
+sys.setrecursionlimit(10000)# It sets recursion limit to 10000.
+
 
 app = FastAPI()
 
@@ -51,6 +55,7 @@ from database import engine
 import logging
 
 from sqlmodel import SQLModel
+
 SQLModel.metadata.create_all(engine)
 
 
@@ -65,8 +70,8 @@ def get_home_page():
     """
 
 
-@app.get("/lakes")
-def get_lakes(
+@app.get("/water_bodies")
+def get_water_bodies(
         response: Response,
         id: Optional[int] = None,
         min_surface_area: Optional[float] = None,
@@ -75,18 +80,18 @@ def get_lakes(
         max_latitude: float = 90.0,
         min_longitude: float = -180.0,
         max_longitude: float = 180.0,
-        limit: int = 100        
-    ) -> list[Lake]:
+        limit: int = 100   
 
-    lake_ids = [id] if id is not None else None
-    lakes = query_lakes(**locals())
+    ) -> list[WaterBody]:
+    # WaterBody
+    ids = [id] if id is not None else None
+    water_bodies = query_water_bodies(**locals())
 
     response.headers.update(cors_headers) #TODO is this necessary?
-    return lakes
+    return water_bodies
 
-            
-def query_lakes(
-        lake_ids: list[str] = None,
+def query_water_bodies(
+        ids: list[str] = None,
         min_surface_area: Optional[float] = None,
         max_surface_area: Optional[float] = None,
         min_latitude: float = -90.0,
@@ -96,64 +101,63 @@ def query_lakes(
         limit: int = 100,
         order_by_size: bool = True,
         **kwargs
-    ) -> list[Lake]:
-
-    # id_filter = "true" if lake_ids is None else f"id IN ({','.join(lake_ids)})"
-
-    # rows = engine.execute(f"""
-    # SELECT * FROM {Lake.__tablename__}
-    # WHERE 
-    #     {id_filter}
-    #     AND
-    #     latitude >= {min_latitude}
-    #     AND
-    #     latitude <= {max_latitude}
-    #     AND
-    #     longitude >= {min_longitude}
-    #     AND
-    #     longitude <= {max_longitude}
-    # LIMIT {limit}
-    # """)
-
-    # lakes = (Lake(**row) for row in rows)
-
+    ) -> list[WaterBody]:
     with Session(engine) as session:
-        statement = select(Lake)
+        statement = select(WaterBody)
 
-        if lake_ids:
-            statement = statement.filter(Lake.id.in_(lake_ids))
+        if ids:
+            statement = statement.filter(WaterBody.id.in_(ids))
         
         if min_surface_area:
-            statement = statement.where(Lake.surface_area_m2 >= min_surface_area)
+            statement = statement.where(WaterBody.areasqkm >= min_surface_area)
         
         if max_surface_area:
-            statement = statement.where(Lake.surface_area_m2 <= max_surface_area)
+            statement = statement.where(WaterBody.areasqkm <= max_surface_area)
 
-        
         statement = (
             statement
-                .where(cast(Lake.latitude , Float)>= min_latitude)
-                .where(cast(Lake.latitude , Float)<= max_latitude)
-                .where(cast(Lake.longitude, Float) >= min_longitude)
-                .where(cast(Lake.longitude, Float) <= max_longitude)
+                .where(cast(WaterBody.latitude , Float)>= min_latitude)
+                .where(cast(WaterBody.latitude , Float)<= max_latitude)
+                .where(cast(WaterBody.longitude, Float) >= min_longitude)
+                .where(cast(WaterBody.longitude, Float) <= max_longitude)
         )
     
         if order_by_size:
-            statement = statement.order_by(Lake.surface_area_m2.desc())
+            statement = statement.order_by(WaterBody.areasqkm.desc())
 
         statement = statement.limit(limit)
         
-        lakes = session.exec(statement).all()
+        water_bodies = session.exec(statement).all()
 
-    return lakes
-    # lake_weather_reports/
+    return water_bodies
 
-# TODO add lake size sorting for limit
-@app.get("/lake_weather_reports/")
-def get_lake_weather_reports(
+
+@app.get("/water_body_geometries")
+def get_water_bodies(
+        response: Response,
+        water_body_ids: Optional[str] = None
+
+    ) -> list[Any]:
+
+    if water_body_ids:
+        water_body_ids = str(water_body_ids).split(",")  # Renaming for clarity
+
+    with Session(engine) as session:
+        statement = select(WaterBodyGeometry).filter(WaterBodyGeometry.id.in_(water_body_ids))
+
+        water_body_geometries = session.exec(statement).all()
+
+    response.headers.update(cors_headers) #TODO is this necessary?
+    return water_body_geometries
+
+
+
+# TODO add water_body size sorting for limit
+@app.get("/water_body_weather_reports/")
+def get_water_body_weather_reports(
         date: datetime.date = datetime.datetime.today().date(),
-        # lake_id: Annotated[list[int], Query()] = None,
-        lake_ids: str = None, # comma separated list of lake ids
+        # water_body_id: Annotated[list[int], Query()] = None,
+        water_body_ids: str = None, # comma separated list of water_body ids
         min_surface_area: Optional[float] = None,
         max_surface_area: Optional[float] = None,
         min_latitude: float = -90.0,
@@ -163,14 +167,14 @@ def get_lake_weather_reports(
         limit: int = 100,
         background_tasks: BackgroundTasks = None, # Used for writing to DB after the response is returned
         response: Response = None
-    ) -> list[LakeWeatherReport]:
+    ) -> list[WaterBodyWeatherReport]:
 
-    if lake_ids:
-        lake_ids = lake_ids.split(",")  # Renaming for clarity
+    if water_body_ids:
+        water_body_ids = water_body_ids.split(",")  # Renaming for clarity
 
-    # print(f"{lake_ids}")
+    # print(f"{water_body_ids}")
 
-    lakes = query_lakes(**locals())
+    water_bodys = query_water_bodies(**locals())
 
     logger = logging.getLogger()
 
@@ -180,7 +184,7 @@ def get_lake_weather_reports(
 
     min_date = date - datetime.timedelta(days=WEATHER_LOOKBACK_DAYS)
     
-    # latlong_filter = ' OR '.join([f"(latitude = {lake.latitude} AND longitude = {lake.longitude} )" for lake in lakes])
+    # latlong_filter = ' OR '.join([f"(latitude = {water_body.latitude} AND longitude = {water_body.longitude} )" for water_body in water_bodys])
 
     # engine.execute(f"""
     # SELECT * FROM {DailyWeather.__tablename__}
@@ -197,12 +201,12 @@ def get_lake_weather_reports(
     with Session(engine) as session:
         stmt = select(DailyWeather)
         
-        if len(lakes):
+        if len(water_bodys):
             stmt = stmt.where(
                 functools.reduce(or_,
                     [
-                        and_(DailyWeather.latitude == lake.latitude, DailyWeather.longitude == lake.longitude ) 
-                        for lake in lakes
+                        and_(DailyWeather.latitude == water_body.latitude, DailyWeather.longitude == water_body.longitude ) 
+                        for water_body in water_bodys
                     ]
                 )
             )
@@ -223,19 +227,19 @@ def get_lake_weather_reports(
     # If not all data is present, get it from the weather api and store it in the db
     weathers_to_get = []
     
-    for lake in lakes:
+    for water_body in water_bodys:
         for weather_date in weather_dates:
             has_existing_weather = False
             for weather in existing_weathers:
                 if (weather.date == weather_date 
-                    and lake.latitude == weather.latitude 
-                    and lake.longitude == weather.longitude
+                    and water_body.latitude == weather.latitude 
+                    and water_body.longitude == weather.longitude
                 ):
                     has_existing_weather = True
             if not has_existing_weather:
                 weathers_to_get.append({
-                        "latitude": lake.latitude,
-                        "longitude": lake.longitude,
+                        "latitude": water_body.latitude,
+                        "longitude": water_body.longitude,
                         "date": weather_date
                     })
 
@@ -271,52 +275,52 @@ def get_lake_weather_reports(
         
     CURRENT_ICE_ALG_VERSION = "0.0.1"
 
-    # print(lakes)
+    # print(water_bodys)
 
     reports = []
-    for lake in lakes:
-        weathers_for_lake = []
+    for water_body in water_bodys:
+        weathers_for_water_body = []
         for weather in weathers:
-            if lake.latitude == weather.latitude and lake.longitude == weather.longitude:
-                if weather.date not in [w.date for w in weathers_for_lake]:
-                    weathers_for_lake.append(weather)
+            if water_body.latitude == weather.latitude and water_body.longitude == weather.longitude:
+                if weather.date not in [w.date for w in weathers_for_water_body]:
+                    weathers_for_water_body.append(weather)
 
-        ice_thickness_m = ashton_ice_growth(weathers_for_lake)
+        ice_thickness_m = ashton_ice_growth(weathers_for_water_body)
 
         
         # print(ice_thickness_m)
 
-        report = LakeWeatherReport(
-            lake_id=lake.id,
+        report = WaterBodyWeatherReport(
+            water_body_id=water_body.id,
             date=date,
             ice_alg_version=CURRENT_ICE_ALG_VERSION,
             ice_m=ice_thickness_m,
             is_frozen=ice_thickness_m > 0,
-            latitude=lake.latitude,
-            longitude=lake.longitude,
-            lake_name=lake.lake_name
+            latitude=water_body.latitude,
+            longitude=water_body.longitude,
+            water_body_name=water_body.name
         )
 
         reports.append(report)
 
     # print(reports)
 
-    # background_tasks.add_task(insert_lake_freeze_report, report)    
+    # background_tasks.add_task(insert_water_body_freeze_report, report)    
 
     return reports
 
 
-# @app.get("/lakes/update_lat_long")
+# @app.get("/water_bodys/update_lat_long")
 # def update_lat_long(
 #         limit: int = 1
 #     ):
 #     with Session(engine) as session:
 #         statement = select(Lake).where(Lake.longitude.is_(None) | Lake.latitude.is_(None)).limit(limit)
-#         lakes = session.exec(statement).all()
+#         water_bodys = session.exec(statement).all()
 
-#     update_latitude_and_longitude(lakes)
+#     update_latitude_and_longitude(water_bodys)
 
-#     return f"updated {len(lakes)}"
+#     return f"updated {len(water_bodys)}"
     
 
 def insert_weathers(weathers: list[DailyWeather]):
@@ -327,9 +331,9 @@ def insert_weathers(weathers: list[DailyWeather]):
             result = conn.execute(stmt)
         conn.commit()
 
-def insert_lake_freeze_report(report: LakeWeatherReport):
+def insert_water_body_freeze_report(report: WaterBodyWeatherReport):
     with engine.connect() as conn:
-        stmt = insert(LakeWeatherReport).values(report.dict())
+        stmt = insert(WaterBodyWeatherReport).values(report.dict())
         stmt = stmt.on_conflict_do_nothing()
         result = conn.execute(stmt)
     conn.commit()
