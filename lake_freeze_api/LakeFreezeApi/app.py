@@ -15,6 +15,7 @@ import json
 import boto3
 from typing import Optional, Any
 import datetime
+from functools import lru_cache
 
 from data_models import DailyWeather, WaterBody, WaterBodyGeometry, WaterBodyWeatherReport
 from weather_api import get_weather_data
@@ -90,6 +91,7 @@ def get_water_bodies(
     response.headers.update(cors_headers) #TODO is this necessary?
     return water_bodies
 
+@lru_cache(maxsize=16)
 def query_water_bodies(
         ids: list[str] = None,
         min_surface_area: Optional[float] = None,
@@ -154,6 +156,7 @@ def get_water_bodies(
 
 # TODO add water_body size sorting for limit
 @app.get("/water_body_weather_reports/")
+@lru_cache(maxsize=16)
 def get_water_body_weather_reports(
         date: datetime.date = datetime.datetime.today().date(),
         # water_body_id: Annotated[list[int], Query()] = None,
