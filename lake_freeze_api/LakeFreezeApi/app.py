@@ -315,7 +315,7 @@ def get_water_body_weather_reports(
 
 @app.get("/waterbody_image")
 def get_water_body_image(
-        waterbody_id: int = 9725,
+        waterbody_id: int,
         nearest_ts: datetime.datetime = datetime.datetime.now()
     ) -> WaterBodySatelliteImage | None:
     """Returns a reference to a satellite image of a water body"""
