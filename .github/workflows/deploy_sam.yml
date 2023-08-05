@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     container:
-      image: public.ecr.aws/sam/build-python3.9:latest
+      image: public.ecr.aws/sam/build-python3.11:latest
 
     steps:
     - name: Checkout
