@@ -57,18 +57,30 @@ class DailyWeather(SQLModel, table=True):
     shortwave_radiation_sum: float = Field(default=None)
     et0_fao_evapotranspiration: float = Field(default=None)
 
-
-    
+  
 class WaterBodyWeatherReport(SQLModel, table=True):
     __tablename__ = "waterbody_weather_reports"
-    water_body_id: int = Field(primary_key=True)
+    waterbody_id: int = Field(primary_key=True)
     date: datetime.date = Field(primary_key=True)
     ice_alg_version: str
     ice_m: float
     is_frozen: bool
     latitude: str
     longitude: str
-    water_body_name: str
+    waterbody_name: str
     last_updated_ts: Optional[datetime.datetime] = Field(default=datetime.datetime.now(datetime.timezone.utc))
     
-    
+
+class WaterBodySatelliteImage(SQLModel, table=True):    
+    __tablename__ = "waterbody_satellite_images"
+
+    waterbody_id: int = Field(primary_key=True)
+    captured_ts: datetime.datetime = Field(primary_key=True)
+    satellite_dataset: str
+    ee_id: str 
+    properties: str = Field(default=None, sa_column=Column(JSONB))
+    filename: str
+    thumbnail_filename: str
+    red_average: float
+    green_average: float
+    blue_average: float

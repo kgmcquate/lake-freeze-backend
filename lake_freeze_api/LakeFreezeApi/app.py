@@ -5,7 +5,7 @@ from fastapi import FastAPI, BackgroundTasks, Response, Query
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from sqlmodel import Session, select
+from sqlmodel import Session, select, text
 from sqlalchemy.sql.operators import is_, or_, and_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import cast, Numeric, Float
@@ -17,7 +17,7 @@ from typing import Optional, Any
 import datetime
 from functools import lru_cache
 
-from data_models import DailyWeather, WaterBody, WaterBodyGeometry, WaterBodyWeatherReport
+from data_models import DailyWeather, WaterBody, WaterBodyGeometry, WaterBodyWeatherReport, WaterBodySatelliteImage
 from weather_api import get_weather_data
 from ice_growth_models import ashton_ice_growth
 
@@ -294,37 +294,68 @@ def get_water_body_weather_reports(
         # print(ice_thickness_m)
 
         report = WaterBodyWeatherReport(
-            water_body_id=water_body.id,
+            waterbody_id=water_body.id,
             date=date,
             ice_alg_version=CURRENT_ICE_ALG_VERSION,
             ice_m=ice_thickness_m,
             is_frozen=ice_thickness_m > 0,
             latitude=water_body.latitude,
             longitude=water_body.longitude,
-            water_body_name=water_body.name
+            waterbody_name=water_body.name
         )
 
         reports.append(report)
 
     # print(reports)
 
-    # background_tasks.add_task(insert_water_body_freeze_report, report)    
+    background_tasks.add_task(insert_water_body_freeze_report, reports)
 
     return reports
 
 
-# @app.get("/water_bodys/update_lat_long")
-# def update_lat_long(
-#         limit: int = 1
-#     ):
-#     with Session(engine) as session:
-#         statement = select(Lake).where(Lake.longitude.is_(None) | Lake.latitude.is_(None)).limit(limit)
-#         water_bodys = session.exec(statement).all()
+@app.get("/waterbody_image")
+def get_water_body_image(
+        waterbody_id: int = 9725,
+        nearest_ts: datetime.datetime = datetime.datetime.now()
+    ) -> WaterBodySatelliteImage | None:
+    """Returns a reference to a satellite image of a water body"""
 
-#     update_latitude_and_longitude(water_bodys)
+    sql_stmt = f"""
+    with t1 as (
+        select 
+        * ,
+        '{nearest_ts.isoformat()}'::timestamp - captured_ts as time_interval
+        from {WaterBodySatelliteImage.__tablename__}
+        where waterbody_id = {int(waterbody_id)}
+    )
+    ,
+    t2 as (
+        select *,
+        GREATEST(time_interval, -time_interval) as abs_time_interval
+        from t1
+    )
 
-#     return f"updated {len(water_bodys)}"
-    
+    SELECT * FROM t2 
+    ORDER BY abs_time_interval ASC
+    LIMIT 1
+    """
+
+    # (
+    #     select(WaterBodySatelliteImage)
+    #     .append_column()
+    #     .where()
+    # )
+
+    with Session(engine) as session:
+        statement = text(sql_stmt)
+
+        image = session.exec(statement).first()    
+
+    if image is None:
+        return None
+
+    return WaterBodySatelliteImage(**image._asdict())
+
 
 def insert_weathers(weathers: list[DailyWeather]):
     with engine.connect() as conn:
@@ -334,12 +365,13 @@ def insert_weathers(weathers: list[DailyWeather]):
             result = conn.execute(stmt)
         conn.commit()
 
-def insert_water_body_freeze_report(report: WaterBodyWeatherReport):
+def insert_water_body_freeze_report(reports: list[WaterBodyWeatherReport]):
     with engine.connect() as conn:
-        stmt = insert(WaterBodyWeatherReport).values(report.dict())
-        stmt = stmt.on_conflict_do_nothing()
-        result = conn.execute(stmt)
-    conn.commit()
+        for report in reports:
+            stmt = insert(WaterBodyWeatherReport).values(report.dict())
+            stmt = stmt.on_conflict_do_nothing()
+            result = conn.execute(stmt)
+        conn.commit()
 
 
 
