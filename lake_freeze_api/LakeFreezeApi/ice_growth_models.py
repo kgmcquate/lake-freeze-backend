@@ -18,5 +18,10 @@ def ashton_ice_growth(
 
     # the average number of degrees below freezing over 24 hours
     initial_ice_thickness = 0
+
+    ice_thickness = initial_ice_thickness + sum([get_fdd(weather_day) for weather_day in weather_days])
     
-    return initial_ice_thickness + sum([get_fdd(weather_day) for weather_day in weather_days])
+    if ice_thickness <= 0:
+          return 0.0
+    
+    return ice_thickness

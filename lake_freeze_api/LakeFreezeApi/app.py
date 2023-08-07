@@ -85,7 +85,7 @@ def get_water_bodies(
 
     ) -> list[WaterBody]:
     # WaterBody
-    ids = [id] if id is not None else None
+    ids = tuple([id]) if id is not None else None
     water_bodies = query_water_bodies(**locals())
 
     response.headers.update(cors_headers) #TODO is this necessary?
@@ -93,7 +93,7 @@ def get_water_bodies(
 
 @lru_cache(maxsize=16)
 def query_water_bodies(
-        ids: list[str] = None,
+        ids: tuple[str] = None,
         min_surface_area: Optional[float] = None,
         max_surface_area: Optional[float] = None,
         min_latitude: float = -90.0,
@@ -153,13 +153,35 @@ def get_water_bodies(
     return water_body_geometries
 
 
+@app.get("/get_daily_weather/")
+@lru_cache(maxsize=2000)
+def get_daily_weather(
+        latitude: str,
+        longitude: str,
+        date: datetime.date = datetime.datetime.today().date()
+    ) -> DailyWeather | None:
+    
+    stmt = select(DailyWeather).where(
+        and_(
+            DailyWeather.latitude == latitude,
+            DailyWeather.longitude == longitude,
+        )
+    
+    ).where(
+        DailyWeather.date == date
+    )
+
+    with Session(engine) as session:
+        weather = session.exec(stmt).first()
+        
+    return weather
+
 
 # TODO add water_body size sorting for limit
 @app.get("/water_body_weather_reports/")
 @lru_cache(maxsize=16)
 def get_water_body_weather_reports(
         date: datetime.date = datetime.datetime.today().date(),
-        # water_body_id: Annotated[list[int], Query()] = None,
         water_body_ids: str = None, # comma separated list of water_body ids
         min_surface_area: Optional[float] = None,
         max_surface_area: Optional[float] = None,
@@ -173,7 +195,7 @@ def get_water_body_weather_reports(
     ) -> list[WaterBodyWeatherReport]:
 
     if water_body_ids:
-        water_body_ids = water_body_ids.split(",")  # Renaming for clarity
+        water_body_ids = tuple(water_body_ids.split(","))  # Renaming for clarity
 
     # print(f"{water_body_ids}")
 
@@ -197,7 +219,6 @@ def get_water_body_weather_reports(
     # )
     # AND date BETWEEN {min_date} AND {date}
     # """)
-
 
     # TODO this probably should just be a sql join
     
