@@ -16,8 +16,8 @@ jobs:
     name: Deploy 
     runs-on: ubuntu-latest
     environment: production
-    container:
-      image: public.ecr.aws/sam/build-python3.11:latest
+    # container:
+    #   image: public.ecr.aws/sam/build-python3.11:latest
 
     steps:
     - name: Checkout
@@ -32,7 +32,7 @@ jobs:
 
 
     - name: SAM build
-      run: cd lake_freeze_api/ && sam build --use-container --build-image public.ecr.aws/sam/build-python3.11:latest-arm64
+      run: cd lake_freeze_api/ && sam build --use-container #--build-image public.ecr.aws/sam/build-python3.11:latest-arm64
       
     - name: SAM deploy
       run: cd lake_freeze_api/ && sam deploy
