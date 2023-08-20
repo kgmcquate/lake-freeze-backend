@@ -27,7 +27,7 @@ Resources:
     Properties:
       FunctionName: lake-freeze-api
       Runtime: python3.11
-      # Architectures: [arm64]
+      Architectures: [arm64]
       CodeUri: LakeFreezeApi/
       Handler: app.handler
 
