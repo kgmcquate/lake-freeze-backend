@@ -19,7 +19,7 @@ from functools import lru_cache
 
 from data_models import DailyWeather, WaterBody, WaterBodyGeometry, WaterBodyWeatherReport, WaterBodySatelliteImage
 from weather_api import get_weather_data
-from ice_growth_models import ashton_ice_growth
+from ice_growth_models import ashton_ice_growth, white_fraction_xgb
 
 import sys
 
@@ -51,7 +51,7 @@ cors_headers = {
             "Access-Control-Allow-Methods": "*" # Allow only GET request 
         }
 
-from database import engine
+from database import engine, sqlalchemy_url
 
 import logging
 
@@ -69,6 +69,19 @@ def get_home_page():
         </body>
     </html>
     """
+
+@app.get("/predict_white_fraction")
+def predict_white_fraction(
+        date: datetime.date,
+        latitude: float,
+        longitude: float
+    ):
+    """uses XGBoost model to predict fraction of snow cover"""
+    return white_fraction_xgb(
+        date,
+        latitude,
+        longitude
+    )
 
 
 @app.get("/water_bodies")
@@ -393,7 +406,6 @@ def insert_water_body_freeze_report(reports: list[WaterBodyWeatherReport]):
             stmt = stmt.on_conflict_do_nothing()
             result = conn.execute(stmt)
         conn.commit()
-
 
 
 if __name__ == "__main__":

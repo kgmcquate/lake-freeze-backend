@@ -1,6 +1,12 @@
 from data_models import DailyWeather
 from dataclasses import dataclass
 
+import os 
+import datetime
+import xgboost as xgb
+import pandas as pd
+
+
 def ashton_ice_growth(
             weather_days: list[DailyWeather]            
         ):
@@ -25,3 +31,33 @@ def ashton_ice_growth(
           return 0.0
     
     return ice_thickness
+
+def white_fraction_xgb(
+        date: datetime.date,
+        latitude: float,
+        longitude: float
+    ) -> float:
+
+    model = xgb.Booster()
+
+    model_file_path = os.path.join(
+          os.path.dirname(os.path.abspath(__file__)),
+          "model_objects",
+          "white_fraction_model.json"
+    )
+    model.load_model(model_file_path)
+
+    year = date.year
+    month = date.month
+    day_of_year = date.timetuple().tm_yday
+
+    pred = model.predict(
+        xgb.DMatrix(
+            pd.DataFrame(
+                data=[[year, month, day_of_year, latitude, longitude]],
+                columns=["year", "month", "day_of_year", "latitude", "longitude"]
+            )
+        )
+    )
+
+    return float(pred[0])

@@ -19,8 +19,9 @@ db_username = secret["username"]
 
 db_password = secret["password"]
 
+sqlalchemy_url = f'postgresql+psycopg2://{db_username}:{db_password}@{db_endpoint}'
 
 print("creating engine")
-engine = sqlmodel.create_engine(f'postgresql+psycopg2://{db_username}:{db_password}@{db_endpoint}') #/lake_freeze
+engine = sqlmodel.create_engine(sqlalchemy_url) #/lake_freeze
 
 
