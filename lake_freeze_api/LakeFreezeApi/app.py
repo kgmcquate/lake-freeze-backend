@@ -11,8 +11,6 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import cast, Numeric, Float
 import sqlalchemy
 from mangum import Mangum
-import json
-import boto3
 from typing import Optional, Any
 import datetime
 from functools import lru_cache
