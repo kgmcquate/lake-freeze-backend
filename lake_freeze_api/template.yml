@@ -21,6 +21,11 @@ Globals:
       AllowHeaders: "'content-type'"
       AllowOrigin: "'*'"
 
+
+Metadata:
+  Dockerfile: Dockerfile
+  DockerContext: .
+
 Resources:
   LakeFreezeApi:
     Type: AWS::Serverless::Function
@@ -29,6 +34,7 @@ Resources:
       Runtime: python3.11
       Architectures: [arm64]
       CodeUri: LakeFreezeApi/
+      # PackageType: Image
       Handler: app.handler
 
       Timeout: 360

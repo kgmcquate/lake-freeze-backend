@@ -16,7 +16,7 @@ import datetime
 from functools import lru_cache
 
 from data_models import DailyWeather, WaterBody, WaterBodyGeometry, WaterBodyWeatherReport, WaterBodySatelliteImage
-from weather_api import get_weather_data
+
 from ice_growth_models import ashton_ice_growth, white_fraction_xgb
 
 import sys

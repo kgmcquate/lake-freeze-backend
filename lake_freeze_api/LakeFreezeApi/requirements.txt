@@ -9,3 +9,4 @@ sqlmodel
 # uvicorn[standard]
 # requests
 xgboost
+# pandas

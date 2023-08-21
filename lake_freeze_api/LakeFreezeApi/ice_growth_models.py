@@ -3,8 +3,7 @@ from dataclasses import dataclass
 
 import os 
 import datetime
-import xgboost as xgb
-import pandas as pd
+
 
 
 def ashton_ice_growth(
@@ -37,6 +36,8 @@ def white_fraction_xgb(
         latitude: float,
         longitude: float
     ) -> float:
+    
+    import xgboost as xgb
 
     model = xgb.Booster()
 
@@ -53,11 +54,9 @@ def white_fraction_xgb(
 
     pred = model.predict(
         xgb.DMatrix(
-            pd.DataFrame(
-                data=[[year, month, day_of_year, latitude, longitude]],
-                columns=["year", "month", "day_of_year", "latitude", "longitude"]
-            )
-        )
+            data=[[year, month, day_of_year, latitude, longitude]]
+        ) 
+        
     )
 
     return float(pred[0])
