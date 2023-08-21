@@ -84,3 +84,4 @@ class WaterBodySatelliteImage(SQLModel, table=True):
     red_average: float
     green_average: float
     blue_average: float
+    white_fraction: float
