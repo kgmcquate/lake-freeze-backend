@@ -6,8 +6,10 @@ on:
     branches: [ "main" ]
 
 env:
-  AWS_REGION: us-east-1
   SAM_CLI_TELEMETRY: 0
+  AWS_ACCESS_KEY_ID: "${{ secrets.AWS_ACCESS_KEY_ID }}"
+  AWS_SECRET_ACCESS_KEY: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+  AWS_REGION: "${{ env.AWS_REGION }}"
 
 permissions:
   contents: read
@@ -23,14 +25,6 @@ jobs:
     steps:
     - name: Checkout
       uses: taiki-e/checkout-action@v1
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
-
 
     - name: SAM build
       run: cd lake_freeze_api/ && sam build --debug #--use-container #--build-image public.ecr.aws/sam/build-python3.11:latest-arm64
