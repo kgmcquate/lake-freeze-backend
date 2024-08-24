@@ -3,7 +3,7 @@ version = 0.1
 [default.deploy]
 [default.deploy.parameters]
 stack_name = "lake-freeze-api"
-s3_bucket = "deployment-zone-117819748843"
+s3_bucket = "deployment-zone-117819748843-us-east-1"
 s3_prefix = "lake-freeze-api"
 region = "us-east-1"
 capabilities = "CAPABILITY_AUTO_EXPAND"
