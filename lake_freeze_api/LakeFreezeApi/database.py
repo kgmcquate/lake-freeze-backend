@@ -3,9 +3,9 @@ import json
 import os
 import boto3
 
-secret_arn = os.environ.get("DB_CREDS_SECRET_ARN", "arn:aws:secretsmanager:us-east-1:117819748843:secret:lake-freeze-db-creds")
+secret_arn = os.environ.get("DB_CREDS_SECRET_ARN", "arn:aws:secretsmanager:us-east-1:117819748843:secret:main-rds-db-creds")
 
-db_endpoint = os.environ.get("DB_ENDPOINT" , "lake-freeze-db.cu0bcthnum69.us-east-1.rds.amazonaws.com")
+# db_endpoint = os.environ.get("DB_ENDPOINT" , "lake-freeze-db.cu0bcthnum69.us-east-1.rds.amazonaws.com")
 
 
 print("getting creds from sm")
@@ -19,7 +19,9 @@ db_username = secret["username"]
 
 db_password = secret["password"]
 
-sqlalchemy_url = f'postgresql+psycopg2://{db_username}:{db_password}@{db_endpoint}'
+host = secret["host"]
+
+sqlalchemy_url = f'postgresql+psycopg2://{db_username}:{db_password}@{host}'
 
 print("creating engine")
 engine = sqlmodel.create_engine(sqlalchemy_url) #/lake_freeze
