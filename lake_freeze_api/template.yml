@@ -39,7 +39,7 @@ Resources:
 
       Timeout: 360
       MemorySize: 512
-      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/lake-freeze-lambda-role
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/service-role
 
       Events:
         Root:
